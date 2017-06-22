@@ -380,10 +380,11 @@ my $code=shift;
 my $thread=shift;
 my $error=shift;
 my $log=shift;
+my $alignment=shift;
 my $outdir=$indir.'/results';
 
 print "\n";
-my $nucmer="runNUCmer.pl -q $indir -d $outdir -t $thread -l $list -c $code 2>$error > $log\n\n";
+my $nucmer="runNUCmer.pl -q $indir -d $outdir -t $thread -l $list -c $code -a $alignment 2>$error > $log\n\n";
 print $nucmer;
 if (system ($nucmer)){die "Error running $nucmer.\n";}
 }
@@ -401,10 +402,11 @@ my $reference=shift;
 my $type=shift;
 my $error=shift;
 my $log=shift;
+my $alignment=shift;
 my $outdir=$indir.'/results';
 
 print "\n";
-my $con_nucmer="runContigNUCmer.pl -r $reference -q $indir -d $outdir -l $list -t $thread -y $type 2>>$error >> $log\n\n";
+my $con_nucmer="runContigNUCmer.pl -r $reference -q $indir -d $outdir -l $list -t $thread -y $type -a $alignment 2>>$error >> $log\n\n";
 print $con_nucmer;
 if (system ($con_nucmer)){die "Error running $con_nucmer.\n";}
 }
