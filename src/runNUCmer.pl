@@ -29,7 +29,7 @@ my $identity=0;
 my $gap_cutoff=0;
 my $repeat_identity=97;
 my $len_cutoff= 100;
-my ($query_dir,$thread,$list,$code, $alignment);
+my ($query_dir,$thread,$list,$code,$alignment);
 my @query;
 my $outdir=`pwd`;
    $outdir =~ s/\n//;
@@ -85,12 +85,13 @@ my %queries;
 if ($dir=~ /.+\/$/){my $temp= chop($dir);}
 $dir = $dir.'/files';
 
-open (IN,$list);
-while (<IN>){
+# open (my $list_file, '<', $list);
+open(IN, $list) or die "Can't open '$list': $!";
+while (<$list_file>){
    chomp;
    $queries{$_}++;
 }
-close IN;
+close $list_file;
 
 opendir(PARENT,$dir);
 while (my $files= readdir(PARENT)){  

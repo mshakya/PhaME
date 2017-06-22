@@ -30,6 +30,8 @@
 
        cutoff = 0  # Mismatch cutoff - ignore SNPs within cutoff length of each other.
 
+       alignment = 95 # Minimum percentage genome that must be aligned.
+
 * When using data option 1,2,5 need a complete reference to align/map to. 
 * Use data option 7 when need to extract SNPs using a sublist of already aligned genomes. 
 
