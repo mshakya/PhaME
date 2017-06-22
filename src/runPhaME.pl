@@ -331,7 +331,7 @@ if ($nucmer==1){
    }
 
    &print_timeInterval($runtime,"\tRunning NUCmer on complete genomes\n");
-   PhaME::completeNUCmer($workdir,$bindir,"$workdir/fasta_list.txt",$type,$threads,$error,$logfile);
+   PhaME::completeNUCmer($workdir,$bindir,"$workdir/fasta_list.txt",$type,$threads,$error,$logfile,$alignment);
 #   &print_timeInterval($runtime,"\tNUCmer on genomes complete\n");
 }
 
@@ -344,7 +344,7 @@ if ($contig_nucmer==1){
    }
 
    &print_timeInterval($runtime,"Running NUCmer on contigs\n");
-   PhaME::contigNUCmer($workdir,$bindir,"$workdir/contigs_list.txt",$code,$threads,$reference,$time,$error,$logfile);
+   PhaME::contigNUCmer($workdir,$bindir,"$workdir/contigs_list.txt",$code,$threads,$reference,$time,$error,$logfile,$alignment);
 #   PhaME::contigNUCmer($workdir,$bindir,"$workdir/contigs_list.txt",$threads,$reference,"2",$error);
 }
 close STAT;
