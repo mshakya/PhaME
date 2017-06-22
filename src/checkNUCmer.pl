@@ -8,10 +8,12 @@ my $infile;
 my $reffile;
 my $reference;
 my $length=0;
+my $alignment;
 
 GetOptions(
    'i=s'      => \$infile,
    'r=s'      => \$reffile,
+   'a=f'      => \$alignment,
    'h|help'   => sub{usage()},
 );
 
@@ -47,8 +49,9 @@ if ($fh->open("< $infile")){
    }
 }
 my $difference =$length/$reference;
-if ($difference <0.75){print "0";}
-if ($difference >=0.75){print "1";}
+my $aln_threshold = (100-$alignment)/100;
+if ($difference < $aln_threshold){print "0";}
+if ($difference >= $aln_threshold){print "1";}
 }
 
 sub usage
