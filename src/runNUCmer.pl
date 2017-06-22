@@ -29,7 +29,7 @@ my $identity=0;
 my $gap_cutoff=0;
 my $repeat_identity=97;
 my $len_cutoff= 100;
-my ($query_dir,$thread,$list,$code);
+my ($query_dir,$thread,$list,$code, $alignment);
 my @query;
 my $outdir=`pwd`;
    $outdir =~ s/\n//;
@@ -41,6 +41,7 @@ GetOptions(
    't|thread=i'     => \$thread,
    'l|list=s'       => \$list,
    'c|code=s'       => \$code,
+   'a|alignment=f'  => $alignment,
    'h|help'         => sub{usage()}
 );
 
@@ -196,11 +197,11 @@ while (my @combo= $iteration->()){
    
    my $gaps2= `parseGapsNUCmer.pl $gap_cutoff $outdir/$prefix2.coords 2>/dev/null`;
 
-   my $check= `checkNUCmer.pl -i $outdir/$first_name\_$second_name.gaps -r $reference`;
-   if ($check==1){print "$second_name aligned < 25% of the $first_name genome\n";}
+   my $check= `checkNUCmer.pl -i $outdir/$first_name\_$second_name.gaps -r $reference -a $alignment`;
+   if ($check==1){print "$second_name aligned < $alignment% of the $first_name genome\n";}
 
-   $check= `checkNUCmer.pl -i $outdir/$second_name\_$first_name.gaps -r $query`;
-   if ($check==1){print "$first_name aligned < 25% of the $second_name genome\n";}
+   $check= `checkNUCmer.pl -i $outdir/$second_name\_$first_name.gaps -r $query -a $alignment`;
+   if ($check==1){print "$first_name aligned < $alignment% of the $second_name genome\n";}
 
    ($ref_gaps,$query_gaps,undef)= split /\n/,$gaps2;
 

@@ -25,7 +25,7 @@ my $maxgap=90;
 my $minmatch=20;
 my $identity=0;
 my $gap_cutoff=0;
-my ($working_dir,$reference,$list,$prefix);
+my ($working_dir,$reference,$list,$prefix, $alignment);
 my @query_list;
 my @reference_list;
 my $snp_indel;
@@ -46,6 +46,7 @@ GetOptions(
    't|thread=i'      => \$thread,
    'l|list=s'        => \$list,
    'y|type=i'        => \$type,
+   'a|alignment=f'  => $alignment,
    'h|help'          => sub{usage()}
 );
 
@@ -200,8 +201,8 @@ for (my $i=0;$i<=$#reference_list; $i++){
       if (system ($coords_command)){die "Error running $coords_command.\n";}
 
       my $gaps= `parseGapsNUCmer.pl $gap_cutoff $outdir/$prefix.coords 2>/dev/null`;
-      my $check= `checkNUCmer.pl -i $outdir/$prefix.gaps -r $reference_list[$i]`;
-      if ($check==1){print "$query_list[$j] aligned < 25% of the $reference_list[$i] genome\n";}
+      my $check= `checkNUCmer.pl -a $alignment -i $outdir/$prefix.gaps -r $reference_list[$i]`;
+      if ($check==1){print "$query_list[$j] aligned < $alignment% of the $reference_list[$i] genome\n";}
 
       ($ref_gaps,$query_gaps,undef)= split /\n/,$gaps;
 
