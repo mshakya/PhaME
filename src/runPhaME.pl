@@ -79,6 +79,7 @@ my %contig_list;
 my %read_list;
 my $mappingGaps;
 my $ptree;
+my $alignment;
 
 my $control= $ARGV[0] || "phame.ctl";
 my $bindir=getBinDirectory();
@@ -132,6 +133,7 @@ while (<CTL>){
       if ($threads <1 || $threads>$maxthreads){die ("-thread value must be between 1 and $maxthreads.\n");}
    }
    if (/cutoff\s*=\s*(\d+)\s*#.*$/){$cutoff=$1;}
+   if (/alignment\s*=\s*(\d+)\s*#.*$/){$alignment=$1;}
 }
 close CTL;
 
