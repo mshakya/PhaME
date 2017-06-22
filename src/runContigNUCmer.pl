@@ -46,7 +46,7 @@ GetOptions(
    't|thread=i'      => \$thread,
    'l|list=s'        => \$list,
    'y|type=i'        => \$type,
-   'a|alignment=f'  => $alignment,
+   'a|alignment=f'  => \$alignment,
    'h|help'          => sub{usage()}
 );
 
