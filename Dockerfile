@@ -1,4 +1,4 @@
-ROM debian:8.5
+FROM debian:8.5
 
 MAINTAINER Migun Shakya <migun@lanl.gov>
 
