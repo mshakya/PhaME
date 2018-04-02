@@ -654,6 +654,14 @@ then
     echo "Required version of $FastTree_VER was not found"
     install_FastTree
   fi
+  FastTreeMP_installed_VER=`FastTreeMP 2>&1| grep 'version'|perl -nle 'print $& if m{version \d+\.\d+.\d+}'`;
+  if ( echo $FastTreeMP_installed_VER $FastTree_VER | awk '{if($2>=$3) exit 0; else exit 1}' )
+  then
+    echo " - found FastTreeMP $FastTreeMP_VER"
+  else
+    echo "Required version of FastTreeMP $FastTree_VER was not found"
+    install_FastTree
+  fi
 else
     echo "FastTree was not found"
     install_FastTree
