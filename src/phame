@@ -11,6 +11,7 @@ use File::Basename;
 use Time::Piece;
 use PhaME;
 use Cwd;
+
 # use Statistics::Distributions;
 # use Parallel::ForkManagers;
 use Bio::SeqIO;
@@ -25,12 +26,12 @@ use fastq_utility;
 $| = 1;
 
 # set up environments
-$ENV{PATH}
-    = "$ENV{PATH}:$RealBin:$RealBin/../thirdParty/miniconda/bin:$RealBin/../bin";
-$ENV{PERL5LIB}
-    = ( $ENV{PERL5LIB} )
-    ? "$ENV{PERL5LIB}:$RealBin/../lib:$RealBin/../ext/lib/perl5"
-    : "$RealBin/../lib:$RealBin/../ext/lib/perl5";
+$ENV{PATH} =
+  "$ENV{PATH}:$RealBin:$RealBin/../thirdParty/miniconda/bin:$RealBin/../bin";
+$ENV{PERL5LIB} =
+  ( $ENV{PERL5LIB} )
+  ? "$ENV{PERL5LIB}:$RealBin/../lib:$RealBin/../ext/lib/perl5"
+  : "$RealBin/../lib:$RealBin/../ext/lib/perl5";
 
 =head
 
@@ -77,8 +78,8 @@ my $aligner = "bowtie";
 my $name;
 my $path;
 my $suffix;
-my $gsignal
-    = 0;    # sequence should be parsed (1) for CDSor not (0), depends on gff
+my $gsignal =
+  0;    # sequence should be parsed (1) for CDSor not (0), depends on gff
 my $time       = 1;
 my $data       = 0;
 my $reads      = 2;
@@ -118,7 +119,7 @@ my $snp_filter = 0.0;
 # command line options
 
 GetOptions(
-    'vcheck'    => sub {check_version();exit(0);},
+    'vcheck'    => sub { check_version(); exit(0); },
     'version|v' => sub { version() },
     'help|h'    => sub { printusage() }
 
@@ -139,19 +140,20 @@ my $control = $ARGV[0] || "phame.ctl";
 
 # from snippy
 sub parse_version {
-  my($cmd, $min, $re) = @_;
-  open my $VER, '-|', $cmd.' 2>&1' or err("Could not open pipe to '$cmd', install '$cmd' and try again!");
-  my $blob = join '', <$VER>;
-  err("Could not read output of '$cmd'") unless $blob;
-  #msg("parse=[$blob]");
-  $blob =~ $re;
-  my $ver = defined $1 ? $1 : 0;
-  err("Need $cmd >= $min but you have $ver - please upgrade it.")
-    if version->parse("v$ver") < version->parse("v$min");
-  msg("Checking version: $cmd is >= $min - ok, have $ver");
-  return $ver;
-}
+    my ( $cmd, $min, $re ) = @_;
+    open my $VER, '-|', $cmd . ' 2>&1'
+      or err ("Could not open pipe to '$cmd', install '$cmd' and try again!");
+    my $blob = join '', <$VER>;
+      err ("Could not read output of '$cmd'") unless $blob;
 
+    #msg("parse=[$blob]");
+    $blob =~ $re;
+    my $ver = defined $1 ? $1 : 0;
+      err ("Need $cmd >= $min but you have $ver - please upgrade it.")
+      if version->parse("v$ver") < version->parse("v$min");
+    msg("Checking version: $cmd is >= $min - ok, have $ver");
+    return $ver;
+}
 
 sub check_version {
     parse_version( 'samtools --version', 1.3,   qr/samtools\s(\d+\.\d+)/ms );
@@ -161,8 +163,9 @@ sub check_version {
     parse_version( 'bwa',                0.7,   qr/Version:\s(\d+\.\d+)/ms );
     parse_version( 'FastTree -expert',   2.1,   qr/FastTree\s(\d+\.\d+)/ms );
     parse_version( 'bbmap.sh -v',        38.06, qr/Version\s(\d+\.\d+)/ms );
-    parse_version( 'raxmlHPC-PTHREADS -version', 8.2, qr/version\s(\d+\.\d+)/ms );
-    print_timeInterval($runtime, "Dependencies look good!\n");
+    parse_version( 'raxmlHPC-PTHREADS -version',
+        8.2, qr/version\s(\d+\.\d+)/ms );
+    print_timeInterval( $runtime, "Dependencies look good!\n" );
 }
 
 #----------------------------------------------------------------------
@@ -213,10 +216,9 @@ while (<CTL>) {
     }
     elsif ( $rsignal == 0 ) {
         opendir( DIR, $refdir );
-        my @reffiles
-            = grep { /.[fna|fa|fasta|fsa]$/ && -f "$refdir/$_" } readdir(DIR);
-        $reference
-            = "$refdir/" . $reffiles[ int( rand( scalar(@reffiles) ) ) ];
+        my @reffiles =
+          grep { /.[fna|fa|fasta|fsa]$/ && -f "$refdir/$_" } readdir(DIR);
+        $reference = "$refdir/" . $reffiles[ int( rand( scalar(@reffiles) ) ) ];
         closedir DIR;
     }
 
@@ -229,19 +231,28 @@ while (<CTL>) {
     # default is NO.
     if (/FirstTime\s*=\s*(1|2)\s*#{0,1}.*$/) { $time = $1; }
     if (/data\s*=\s*(\d)\s*#{0,1}.*$/)       { $data = $1; }
+
     #     0=Finished; 1=contig; 2=reads; 3=F+C; 4=F+R; 5=C+R 6=F+C+R
-    if (/\s+reads\s*=\s*(1|2|3)\s*#{0,1}.*$/) { $reads = $1; }
+    if (/\s+reads\s*=\s*(1|2|3)\s*#{0,1}.*$/)  { $reads      = $1; }
     if (/SNPsfilter\s*=\s*(\d+\.*\d+)\s*#.*$/) { $snp_filter = $1; }
 
-    if (/tree\s*=\s*(0|1|2|3|4)\s*#{0,1}.*$/)   { $tree  = $1; }
+    if (/tree\s*=\s*(0|1|2|3|4)\s*#{0,1}.*$/) { $tree = $1; }
+
     #0=no tree; 1=fasttree; 2=raxml; 3=iqtree;4=both
 
     if (/bootstrap\s*=\s*(0|1)\s*#{0,1}.*$/)     { $bsignal    = $1; }
     if (/N\s*=\s*(\d+)\s*#{0,1}.*$/)             { $bootstrap  = $1; }
     if (/PosSelect\s*=\s*(0|1|2|3)\s*#{0,1}.*$/) { $pselection = $1; }
-    if ($pselection > 0) {$gsignal = 1; } # if ME is selected automaticall turn this on
-    # it only reads single digit right now, can look later how to make it read double digits
-    if (/GeneticCodes\s*=\s*(1|2|3|4|5|6|9|10|11|12|13|14|15|16|21|22|23)\s*#{0,1}.*$/) { $gencode = $1; } 
+    if ( $pselection > 0 ) {
+        $gsignal = 1;
+    }    # if ME is selected automaticall turn this on
+     # it only reads single digit right now, can look later how to make it read double digits
+    if (
+/GeneticCodes\s*=\s*(1|2|3|4|5|6|9|10|11|12|13|14|15|16|21|22|23)\s*#{0,1}.*$/
+      )
+    {
+        $gencode = $1;
+    }
 
     if    (/code\s*=\s*(0|1|2)\s*#{0,1}.*$/) { $code = $1; }
     if    ( $code == 1 )                     { $type = "virus"; }
@@ -255,10 +266,10 @@ while (<CTL>) {
     #     0=no clean; 1=clean
     if (/threads\s*=\s*(\d+)\s*#{0,1}.*$/) {
         $threads = $1;
-        my $maxthreads
-            = ( $^O =~ /darwin/ )
-            ? `sysctl hw.ncpu | awk '{print \$2}'`
-            : `grep -c ^processor /proc/cpuinfo`;
+        my $maxthreads =
+          ( $^O =~ /darwin/ )
+          ? `sysctl hw.ncpu | awk '{print \$2}'`
+          : `grep -c ^processor /proc/cpuinfo`;
         if ( $threads < 1 || $threads > $maxthreads ) {
             die("-thread value must be between 1 and $maxthreads.\n");
         }
@@ -272,16 +283,22 @@ close CTL;
 my $error   = "$outdir/$project.error";
 my $logfile = "$outdir/$project.log";
 
-
 print "PhaME v$PACKAGEVERSION \n";
+
+##########################################################################################
+# create some necessary directories
+my $snpdir  = $outdir . '/snps';
+my $gapdir  = $outdir . '/gaps';
+my $statdir = $outdir . '/stats';
+my $summary = $outdir . '/' . "$project\_genome_lengths.txt";
+`mkdir -p $snpdir $gapdir $statdir`;
 
 # Picking up reference genome if one is not picked by the user
 if ( $rsignal == 0 ) {
     opendir( DIR, $refdir );
-    my @reffiles
-        = grep { /.[fna|fa|fasta|fsa]$/ && -f "$refdir/$_" } readdir(DIR);
-    $reference
-        = "$refdir/" . $reffiles[ int( rand( scalar(@reffiles) ) ) ];
+    my @reffiles =
+      grep { /.[fna|fa|fasta|fsa]$/ && -f "$refdir/$_" } readdir(DIR);
+    $reference = "$refdir/" . $reffiles[ int( rand( scalar(@reffiles) ) ) ];
     closedir DIR;
 
 # I add this here to just run mash regardless, but not use mash picked genome as reference
@@ -314,35 +331,39 @@ print "\tproject = $project\n";
 print "\tcdsSNPS = $gsignal\n";
 print "\tbuildSNPdb:\t$buildSNPdb\n";
 print "\tdata:\t$data\n";
-if ( $tree == 1){
-    print "\tTrees will be made using FastTree.\n"
-} elsif ( $tree == 2){
-    print "\tTrees will be made using RaxML.\n"
-} elsif ( $tree == 3){
-    print "\tTrees will be made using iqtree.\n"
-} elsif ( $tree == 4){
-    print "\tTrees will be made using all three methods.\n"
-} elsif ($tree == 0){
-    print "\tNo Trees to be made.\n"
+
+if ( $tree == 1 ) {
+    print "\tTrees will be made using FastTree.\n";
+}
+elsif ( $tree == 2 ) {
+    print "\tTrees will be made using RaxML.\n";
+}
+elsif ( $tree == 3 ) {
+    print "\tTrees will be made using iqtree.\n";
+}
+elsif ( $tree == 4 ) {
+    print "\tTrees will be made using all three methods.\n";
+}
+elsif ( $tree == 0 ) {
+    print "\tNo Trees to be made.\n";
 }
 
-if ( $bsignal == 0 and $tree > 0 ){
-    print "\tNo bootstraps.\n"
+if ( $bsignal == 0 and $tree > 0 ) {
+    print "\tNo bootstraps.\n";
 }
 
-if ( $bsignal == 1 and $tree > 0 ){
-    print "\t$bootstrap bootstraps!\n"
+if ( $bsignal == 1 and $tree > 0 ) {
+    print "\t$bootstrap bootstraps!\n";
 }
 
-if ($pselection > 0 ) {
+if ( $pselection > 0 ) {
     print "\tMolecular Evolution analysis will be performed.\n";
     print "\tGenetic code used is code # $gencode.\n";
 }
 
-
 if ( !-d $refdir || !-d $workdir || !-d $outdir ) {
     print
-        "One or more of the above directories does not exist.\nPlease provide correct directory paths\n";
+"One or more of the above directories does not exist.\nPlease provide correct directory paths\n";
 }
 
 print "\tReference:\t$reference\n";
@@ -406,20 +427,15 @@ print "\tLog file:\t$logfile\n";
 print "\tError file:\t$error\n";
 
 &print_timeInterval( $runtime, "Checking directories and files... \n" );
-my $check = PhaME::check( $workdir, $refdir, $time, $data, $name, $logfile,
-    $project );
+my $check =
+  PhaME::check( $workdir, $refdir, $time, $data, $name, $logfile, $project );
 if ( $data == 7 ) { $check = 0; }
 
 #print "\nCHECK:\t$check\n";
-my $snpdir  = $outdir . '/snps';
-my $gapdir  = $outdir . '/gaps';
-my $statdir = $outdir . '/stats';
-my $summary = $outdir . '/' . "$project\_genome_lengths.txt";
-`mkdir -p $snpdir $gapdir $statdir`;
 
 if ( $time == 1 && $check == 0 && $data != 7 ) {
-    open( ALL, ">$workdir/working_list.txt" ) || die "$!";
-    open( STAT, ">$summary" ) || die "$!";
+    open( ALL,  ">$workdir/working_list.txt" ) || die "$!";
+    open( STAT, ">$summary" )                  || die "$!";
     print STAT "Genome\tLength(bp)\n";
 }
 
@@ -427,14 +443,15 @@ if ( $time == 1 && $check > 0 ) {
     open( ALL, ">>$workdir/working_list.txt" ) || die "$!";
 }
 elsif ( $time == 2 || $data == 7 ) {
-    open( ALL, ">>$workdir/working_list.txt" ) || die "$!";
-    open( STAT, ">>$summary" ) || die "$!";
+    open( ALL,  ">>$workdir/working_list.txt" ) || die "$!";
+    open( STAT, ">>$summary" )                  || die "$!";
     print STAT "Genome\tLength(bp)\n";
 }
 
 if ( $check == 0 ) {
     if ( $data == 0 ) {
-        &print_timeInterval( $runtime, "Running PhaME for complete genomes ONLY\n" );
+        &print_timeInterval( $runtime,
+            "Running PhaME for complete genomes ONLY\n" );
         $nucmer    = 1;
         $buildSNP  = 1;
         $buildtree = 1;
@@ -442,9 +459,9 @@ if ( $check == 0 ) {
     }
     if ( $data == 1 ) {
         &print_timeInterval( $runtime, "Running PhaME for Contigs ONLY\n" );
-        my ( $list, $genome_size )
-            = PhaME::prepareComplete( $workdir, $reference, $name )
-            if ( $time ne "2" );
+        my ( $list, $genome_size ) =
+          PhaME::prepareComplete( $workdir, $reference, $name )
+          if ( $time ne "2" );
         $fasta_list{$list} = $genome_size if ($list);
         $contig_nucmer     = 1;
         $buildSNP          = 1;
@@ -453,9 +470,9 @@ if ( $check == 0 ) {
     }
     if ( $data == 2 ) {
         &print_timeInterval( $runtime, "Running PhaME for Reads ONLY\n" );
-        my ( $list, $genome_size )
-            = PhaME::prepareComplete( $workdir, $reference, $name )
-            if ( $time ne "2" );
+        my ( $list, $genome_size ) =
+          PhaME::prepareComplete( $workdir, $reference, $name )
+          if ( $time ne "2" );
         $fasta_list{$list} = $genome_size if ($list);
         $read_mapping      = 1;
         $buildSNP          = 1;
@@ -463,7 +480,8 @@ if ( $check == 0 ) {
         if ( $pselection > 0 ) { $ps = 1; }
     }
     if ( $data == 3 ) {
-        &print_timeInterval( $runtime, "Running PhaME for Complete and genomes with contigs\n" );
+        &print_timeInterval( $runtime,
+            "Running PhaME for Complete and genomes with contigs\n" );
         $nucmer        = 1;
         $contig_nucmer = 1;
         $buildSNP      = 1;
@@ -471,7 +489,8 @@ if ( $check == 0 ) {
         if ( $pselection > 0 ) { $ps = 1; }
     }
     if ( $data == 4 ) {
-        &print_timeInterval( $runtime, "Running PhaME for Complete and read samples\n" );
+        &print_timeInterval( $runtime,
+            "Running PhaME for Complete and read samples\n" );
         $nucmer       = 1;
         $read_mapping = 1;
         $buildSNP     = 1;
@@ -479,10 +498,11 @@ if ( $check == 0 ) {
         if ( $pselection > 0 ) { $ps = 1; }
     }
     if ( $data == 5 ) {
-        &print_timeInterval( $runtime, "Running PhaME for genomes with contigs and read samples\n" );
-        my ( $list, $genome_size )
-            = PhaME::prepareComplete( $workdir, $reference, $name )
-            if ( $time ne "2" );
+        &print_timeInterval( $runtime,
+            "Running PhaME for genomes with contigs and read samples\n" );
+        my ( $list, $genome_size ) =
+          PhaME::prepareComplete( $workdir, $reference, $name )
+          if ( $time ne "2" );
         $fasta_list{$list} = $genome_size if ($list);
         $contig_nucmer     = 1;
         $read_mapping      = 1;
@@ -491,7 +511,9 @@ if ( $check == 0 ) {
         if ( $pselection > 0 ) { $ps = 1; }
     }
     if ( $data == 6 ) {
-        &print_timeInterval( $runtime, "Running PhaME for complete, genomes with contigs, and read samples\n" );
+        &print_timeInterval( $runtime,
+"Running PhaME for complete, genomes with contigs, and read samples\n"
+        );
         $nucmer        = 1;
         $contig_nucmer = 1;
         $read_mapping  = 1;
@@ -608,13 +630,13 @@ if ( $check == 0 ) {
         opendir( DIR, $refdir );
         while ( my $files = readdir(DIR) ) {
             next if ( $files =~ /^\..?/ );
-            my ( $rname, $rpath, $rsuffix )
-                = fileparse( "$files", qr/\.[^.]*/ );
+            my ( $rname, $rpath, $rsuffix ) =
+              fileparse( "$files", qr/\.[^.]*/ );
             if ( $nucmer == 1 ) {
                 if ( $files =~ /.+\.fn|s?a?s?t?a$/ ) {
                     my $fasta = "$refdir/$files";
-                    my ( $list, $genome_size )
-                        = PhaME::prepareComplete( $workdir, $fasta, $rname );
+                    my ( $list, $genome_size ) =
+                      PhaME::prepareComplete( $workdir, $fasta, $rname );
                     $fasta_list{$list} = $genome_size;
                 }
             }
@@ -633,8 +655,8 @@ if ( $check == 0 ) {
             {
                 my $fasta = "$workdir/$files";
                 if ( !exists $fasta_list{$qname} ) {
-                    my ( $list, $genome_size )
-                        = PhaME::prepareComplete( $workdir, $fasta, $qname );
+                    my ( $list, $genome_size ) =
+                      PhaME::prepareComplete( $workdir, $fasta, $qname );
                     $fasta_list{$list} = $genome_size;
                 }
             }
@@ -644,13 +666,13 @@ if ( $check == 0 ) {
                 && $files !~ /fa?s?t?q/ )
             {
                 my $contig = $workdir . '/' . $files;
-                my ( $list, $genome_size )
-                    = PhaME::prepareContig( $workdir, $contig, $qname );
+                my ( $list, $genome_size ) =
+                  PhaME::prepareContig( $workdir, $contig, $qname );
                 $contig_list{$list} = $genome_size;
             }
         }
         if ( $read_mapping == 1 ) {
-            if ( $files =~ /.+\.f{1}a?s?t?q$/
+            if (   $files =~ /.+\.f{1}a?s?t?q$/
                 && $files !~ /.+\.f{1}n|s?a?s?t?a$/
                 && $files !~ /.+\.contig$|\.contigs$|\.ctg$]$/ )
             {
@@ -663,22 +685,24 @@ if ( $check == 0 ) {
                         #                   print "$read\n";
                     }
                     if ( $reads == 1 && !exists $read_list{"$1_pread"} ) {
-                        print "Running PhaME for single end reads only (*.fastq)\n";
+                        print
+                          "Running PhaME for single end reads only (*.fastq)\n";
                         $read_list_name = $1 . '_sread';
                     }
                     if ( $reads == 3 ) {
-                        print "Running PhaME for both single and paired end reads (*R1.fastq and *R2.fastq, and *.fast)\n";
+                        print
+"Running PhaME for both single and paired end reads (*R1.fastq and *R2.fastq, and *.fast)\n";
                         delete $read_list{"$1_sread"};
                         $read_list_name = $1 . '_read';
                         $read_list_name = $1 . '_pread'
-                            if ( !-e "$workdir/$1.fastq"
+                          if ( !-e "$workdir/$1.fastq"
                             && !-e "$workdir/$1.fq" );
                     }
                     $read_list{$read_list_name}++;
                 }
                 else {
                     next
-                        if ( $reads == 2
+                      if ( $reads == 2
                         || exists $read_list{"${qname}_read"} );
                     $read_list_name = $qname . '_sread';
                     $read_list{$read_list_name}++;
@@ -703,7 +727,7 @@ if ( $nucmer == 1 ) {
         print FAS "$names\n";
         print ALL "$names\n";
         print STAT "$names\t", $fasta_list{$names}, "\n"
-            if ( $time ne "2" );
+          if ( $time ne "2" );
 
         #      print "$names\t",$fasta_list{$names},"\n";
     }
@@ -740,8 +764,8 @@ close STAT;
 
 # based on type, assign ploidy info to ploidy variable. Will be used later when calling SNPs
 # print "$type\n\n\";
-if ($type eq "eukaryote") {$ploidy = "diploid";}
-else {$ploidy = "haploid";}
+if   ( $type eq "eukaryote" ) { $ploidy = "diploid"; }
+else                          { $ploidy = "haploid"; }
 
 if ( $read_mapping == 1 ) {
     open( READ, ">$workdir/reads_list.txt" ) || die "$!";
@@ -751,25 +775,30 @@ if ( $read_mapping == 1 ) {
 
     if ( $time == 2 ) {
         &print_timeInterval( $runtime, "Identifying all gaps\n" );
-        $mappingGaps
-            = PhaME::identifyGaps( $outdir, "$workdir/fasta_list.txt", $name,
+        $mappingGaps =
+          PhaME::identifyGaps( $outdir, "$workdir/fasta_list.txt", $name,
             "map", $project, $error, $logfile );
-        PhaME::removeGaps( $bindir, $reference, $mappingGaps, $error, $logfile );
-        &print_timeInterval( $runtime, "Mapping reads to reference\n" );
-        my $end
-            = PhaME::readsMapping( $workdir, $bindir,
-            "$workdir/reads_list.txt", $threads, $name, $error, $aligner, $ploidy, $snp_filter,
+        PhaME::removeGaps( $bindir, $reference, $mappingGaps, $error,
             $logfile );
+        &print_timeInterval( $runtime, "Mapping reads to reference\n" );
+        my $end = PhaME::readsMapping(
+            $workdir, $bindir, "$workdir/reads_list.txt",
+            $threads, $name,   $error,
+            $aligner, $ploidy, $snp_filter,
+            $logfile
+        );
         &print_timeInterval( $runtime, "$end\n" );
     }
     elsif ( $time == 1 ) {
         my $tempdir = $outdir . '/temp/';
         `mkdir -p $tempdir; cp $reference $tempdir`;
         &print_timeInterval( $runtime, "Mapping reads to reference\n" );
-        my $end
-            = PhaME::readsMapping( $workdir, $bindir,
-            "$workdir/reads_list.txt", $threads, $name, $error, $aligner, $ploidy, $snp_filter,
-            $logfile );
+        my $end = PhaME::readsMapping(
+            $workdir, $bindir, "$workdir/reads_list.txt",
+            $threads, $name,   $error,
+            $aligner, $ploidy, $snp_filter,
+            $logfile
+        );
         &print_timeInterval( $runtime, "$end\n" );
     }
 }
@@ -781,48 +810,58 @@ if ( $buildSNP == 1 ) {
         $project, $error, $logfile );
     &print_timeInterval( $runtime, "Gap identification complete\n" );
     if ( $gsignal == 1 ) {
+
         # &print_timeInterval( $runtime, "Preparing to identify SNPs\n" );
         &print_timeInterval( $runtime,
-            "GFF file provided, SNPs will be differentiated as coding vs noncoding\n");
-        my ( $genname, $genpath, $gensuffix )
-            = fileparse( "$annotation", qr/\.[^.]*/ );
+"GFF file provided, SNPs will be differentiated as coding vs noncoding\n"
+        );
+        my ( $genname, $genpath, $gensuffix ) =
+          fileparse( "$annotation", qr/\.[^.]*/ );
         $genname =~ tr|.|_|;
         PhaME::codingRegions( $outdir, $annotation, $genname );
-        &print_timeInterval( $runtime, "$annotation\n" );        
+        &print_timeInterval( $runtime, "$annotation\n" );
     }
     &print_timeInterval( $runtime, "Preparing to identify SNPs\n" );
-    my $end
-        = PhaME::buildSNPDB( $outdir, $bindir, $reference,
+    my $end =
+      PhaME::buildSNPDB( $outdir, $bindir, $reference,
         "$workdir/working_list.txt", $project, $gsignal, $error, $logfile,
         $cutoff );
     if ( $gsignal == 1 ) {
+
         # print "\tSNPs from contigs and/or raw reads will be parsed\n";
         # print "\tto synonymous and non-synonymous if given\n\n";
-        my ( $genname, $genpath, $gensuffix )
-            = fileparse( "$annotation", qr/\.[^.]*/ );
+        my ( $genname, $genpath, $gensuffix ) =
+          fileparse( "$annotation", qr/\.[^.]*/ );
         $genname =~ tr|.|_|;
         my $cds_gff     = $outdir . "/$genname\_cds.gff";
         my $snps_folder = $outdir . "/snps";
         my $ref_fasta   = "$workdir/files/$genname.fna";
         PhaME::SNPsAnalysis( $cds_gff, $snps_folder, $ref_fasta, $logfile,
-            $error);
+            $error );
     }
 
     &print_timeInterval( $runtime, "$end\n" );
 }
 
-if ( $buildtree == 1 || $bs == 1) {
-    if ($tree > 0 ){
+if ( $buildtree == 1 || $bs == 1 ) {
+    if ( $tree > 0 ) {
         &print_timeInterval( $runtime, "Reconstructing all SNPs phylogeny\n" );
-        my $end = PhaME::buildTree( $bindir, $outdir, $threads, $tree,
-        "$project", $bsignal, $bootstrap, $error, $logfile );
+        my $end = PhaME::buildTree(
+            $bindir,  $outdir,    $threads, $tree, "$project",
+            $bsignal, $bootstrap, $error,   $logfile
+        );
         &print_timeInterval( $runtime, "All SNPs Phylogeny Complete.\n" );
         if ( $gsignal == 1 ) {
-            &print_timeInterval( $runtime, "Reconstructing CDS SNP phylogeny\n" );
-            PhaME::buildTree( $bindir, $outdir, $threads, $tree, "$project\_cds", 0, $bootstrap, 
-            $error, $logfile );
+            &print_timeInterval( $runtime,
+                "Reconstructing CDS SNP phylogeny\n" );
+            PhaME::buildTree(
+                $bindir,         $outdir, $threads,   $tree,
+                "$project\_cds", 0,       $bootstrap, $error,
+                $logfile
+            );
             &print_timeInterval( $runtime, "CDS SNPs phylogeny Complete.\n" );
         }
+
         # if ( $bsignal == 1 ) {
         #     &print_timeInterval( $runtime, "Bootstrapping phylogeny...\n" );
         #     my $end = PhaME::bootstrap( $bindir, $outdir, $threads, $tree,
@@ -842,6 +881,7 @@ if ( -e $tlog )       { `mv $tlog $outdir/`; }
 if ( -e $tparsimony ) { `mv $tparsimony $outdir/`; }
 if ( -e $tresult )    { `mv $tresult $outdir/`; }
 if ( -e $tbest )      { `mv $tbest $outdir/`; }
+
 if ( $tree == 2 || $tree == 3 ) {
     $tbest = $outdir . "/RAxML_bestTree.$project\_cds";
 }
@@ -872,8 +912,10 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
         if ( $tree == 1 ) {
 
             # need to make raxml best tree
-            PhaME::buildTree( $bindir, $outdir, $threads, 2,
-                "$project", 0, $bootstrap, $error, $logfile );
+            PhaME::buildTree(
+                $bindir,    $outdir, $threads, 2, "$project", 0,
+                $bootstrap, $error,  $logfile
+            );
             $pamldir = $outdir . '/paml';
             if ( !-d $pamldir ) { `mkdir -p $pamldir`; }
             $ptree = $pamldir . "/RAxML_bestTree.$project";
@@ -881,7 +923,7 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
         }
         elsif ( $tree == 0 ) {
             print
-                "Need to build a tree before any evolutionary analyses can be performed.\n";
+"Need to build a tree before any evolutionary analyses can be performed.\n";
             exit;
         }
     }
@@ -900,8 +942,10 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
         if ( $tree == 1 ) {
 
             # need to make raxml best tree
-            PhaME::buildTree( $bindir, $outdir, $threads, 2,
-                "$project", 0, $bootstrap, $error, $logfile );
+            PhaME::buildTree(
+                $bindir,    $outdir, $threads, 2, "$project", 0,
+                $bootstrap, $error,  $logfile
+            );
             $hyphydir = $outdir . '/paml';
             if ( !-d $hyphydir ) { `mkdir -p $hyphydir`; }
             `cp $tbest $hyphydir`;
@@ -909,17 +953,16 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
         }
         elsif ( $tree == 0 ) {
             print
-                "Need to build a tree before any evolutionary analyses can be performed.\n";
+"Need to build a tree before any evolutionary analyses can be performed.\n";
             exit;
         }
     }
 
-
     # PREPARE FILES FOR RUNNING PAML OR HYPHY ANALYSIS
     # start extracting genes
     &print_timeInterval( $runtime, "Extracting genes that have SNPs\n" );
-    $end
-        = PhaME::extractGenes( $outdir, $stats_file, $reference, $bindir,
+    $end =
+      PhaME::extractGenes( $outdir, $stats_file, $reference, $bindir,
         "$workdir/working_list.txt", $threads, $gapfile, $genefile, $error,
         $logfile );
     &print_timeInterval( $runtime, "$end\n" );
@@ -927,23 +970,26 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
     # translate genes
     &print_timeInterval( $runtime, "Translating genes that have SNPs\n" );
     $end = PhaME::translateGenes( $outdir, $bindir, $threads, "translate",
-                                 $gencode, $error, $logfile );
+        $gencode, $error, $logfile );
     &print_timeInterval( $runtime, "$end\n" );
 
     # align genes
     &print_timeInterval( $runtime, "Align proteins that have SNPs\n" );
-    $end = PhaME::alignGenes( $outdir, $bindir, $threads, "mafft", $gencode, $error,
+    $end =
+      PhaME::alignGenes( $outdir, $bindir, $threads, "mafft", $gencode, $error,
         $logfile );
     &print_timeInterval( $runtime, "$end\n" );
 
     # reverse translate genes
     &print_timeInterval( $runtime, "Reverse translate amino acids to codon\n" );
-    $end = PhaME::revTransGenes( $outdir, $bindir, $threads, "pal2nal", $gencode,
+    $end =
+      PhaME::revTransGenes( $outdir, $bindir, $threads, "pal2nal", $gencode,
         $error, $logfile );
     &print_timeInterval( $runtime, "$end\n" );
 
     # core genome cdn alignment
-    &print_timeInterval( $runtime, "Join all alignments to create core gene alignment\n" );
+    &print_timeInterval( $runtime,
+        "Join all alignments to create core gene alignment\n" );
     my $core = $genedir . "/" . $project . "_core_genome.cdn";
     $end = PhaME::core( $outdir, $bindir, $core, $error, $logfile );
     &print_timeInterval( $runtime, "$end\n" );
@@ -952,9 +998,8 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
     if ( $pselection == 1 || $pselection == 3 ) {
         &print_timeInterval( $runtime, "Running PAML...\n" );
         $end = PhaME::paml(
-            $outdir, $bindir,     $ptree, 0,
-            "Sites", "0,1,2,7,8", $core,  $threads,
-            $error,  $logfile
+            $outdir, $bindir,  $ptree, 0, "Sites", "0,1,2,7,8",
+            $core,   $threads, $error, $logfile
         );
         &print_timeInterval( $runtime, "$end\n" );
         &print_timeInterval( $runtime, "Running PAML with branch length...\n" );
@@ -978,8 +1023,9 @@ if ( $ps == 1 ) {    # if selection analysis is turned ON
 ################################################################################
 if ($clean) { PhaME::clean($outdir); }
 
-PhaME::movefiles($outdir, $tree, $data);
-&print_timeInterval( $runtime, "Run Complete!, Check $workdir/results folder for results.\n" );
+PhaME::movefiles( $outdir, $tree, $data );
+&print_timeInterval( $runtime,
+    "Run Complete!, Check $workdir/results folder for results.\n" );
 
 close STDOUT;
 ###########################################################
@@ -989,7 +1035,7 @@ close STDOUT;
 ###########################################################
 
 sub getBinDirectory {
-    my @t = split '/', "$FindBin::RealBin";
+    my @t    = split '/', "$FindBin::RealBin";
     my $path = join '/', @t;
     return ($path);
 }
@@ -1001,7 +1047,7 @@ sub print_timeInterval {
     $now = time - $now;
 
     my $string = sprintf "%02d:%02d:%02d", int( $now / 3600 ),
-        int( ( $now % 3600 ) / 60 ), int( $now % 60 );
+      int( ( $now % 3600 ) / 60 ), int( $now % 60 );
     print "[$string]  $msg";
 }
 
