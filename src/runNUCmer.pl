@@ -18,7 +18,8 @@ use File::Basename;
 use Parallel::ForkManager;
 use lib "$RealBin/../lib/";
 use lib "$RealBin/../ext/lib/perl5";
-use PhaME;
+use phame::PhaME;
+use phame::nucmer;
 use misc_funcs;
 use Cwd 'abs_path';
 
@@ -121,13 +122,15 @@ if ( $buildSNPdb == 0 ) {
     run_ref_nucmer( @query, $ref_genome );
 }
 elsif ( $buildSNPdb == 1 ) {
-    run_nucmer(@query);
+    run_all_nucmer(@query);
 }
 cleanup();
 
 ################################################################################
 
 sub run_self_nucmer {
+
+    # function that runs self nucmer on complete genomes
     my $ident      = 95;
     my $len_cutoff = 75;
 
@@ -175,12 +178,13 @@ sub run_self_nucmer {
 }
 
 ################################################################################
-sub run_nucmer {
+sub run_all_nucmer {
 
-    # A function that rund all vs. all nucmer
+    # A function that run all vs. all nucmer
     my $iteration = PhaME::combo( 2, @query );
     my $pm        = new Parallel::ForkManager($thread);
 
+    # creating threads?
     $pm->run_on_finish(
         sub {
             my ( $pid, $exit_code, $ident, $exit_signal, $core_dump ) = @_;
@@ -208,183 +212,121 @@ sub run_nucmer {
           File::Spec->catpath( $outdir, "stats",
             $second_name . '_norepeats.fna' );
 
-        # my $first_fasta  = $outdir . '/' . $first_name . '_norepeats.fna';
-        # my $second_fasta = $outdir . '/' . $second_name . '_norepeats.fna';
 ################################################################################
-        #need to write a split function here to just get the equivalent of
-        # if ( $first_name !~ /$ref_genome/ && $ref_genome ) {
-        my $delta_file1 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.delta' );
-        my $delta_file2 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix2 . '.delta' );
-        if ( -e $delta_file1 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            print "Running nucmer on $prefix1\n";
-            my $nucmer_command1 =
-"nucmer $options -p $prefix1 $first_fasta $second_fasta  2>/dev/null";
-            print "[RUNNING:] $nucmer_command1\n";
-            if ( system($nucmer_command1) ) {
-                die "Error running nucmer_command1 $nucmer_command1.\n";
+        # run nucmer command, first vs. second genome
+        nucmer::run_nucmer(
+            {
+                outdir            => $outdir,
+                prefix            => $prefix1,
+                ref_fasta         => $first_fasta,
+                full_genome_fasta => $second_fasta,
+                options           => $options
             }
-            `mv $prefix1.delta nucmer/`;
-        }
+        );
+
+        # run nucmer command, second vs. first genome
+        nucmer::run_nucmer(
+            {
+                outdir            => $outdir,
+                prefix            => $prefix2,
+                ref_fasta         => $second_fasta,
+                full_genome_fasta => $first_fasta,
+                options           => $options
+            }
+        );
+
+        nucmer::run_delta_filter_snp(
+            {
+                outdir   => $outdir,
+                identity => $identity,
+                prefix   => $prefix1
+            }
+        );
+
+        nucmer::run_delta_filter_snp(
+            {
+                outdir   => $outdir,
+                identity => $identity,
+                prefix   => $prefix2
+            }
+        );
+
 ################################################################################
+
         my $snpfilter_file1 =
           File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.snpfilter' );
-        if ( -e $snpfilter_file1 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $filter_command1 =
-              "delta-filter -1 $identity $delta_file1 > $snpfilter_file1";
-            if ( system($filter_command1) ) {
-                die "Error running filter_command1 $filter_command1.\n";
-            }
-        }
+
 ################################################################################
-        my $snp_file1 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.snps' );
-        if ( -e $snpfilter_file1 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $snp_command1 =
-              "show-snps -CT $outdir/$prefix1.snpfilter > $snp_file1";
-            if ( system($snp_command1) ) {
-                die "Error running snp_command1 $snp_command1.\n";
+        nucmer::run_show_snps(
+            {
+                outdir => $outdir,
+                prefix => $prefix1
             }
-            $snp_indel = `SNP_INDEL_count.pl $snp_file1`;
-            $snp_indel =~ s/\n//;
-            ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
-        }
+        );
+        nucmer::run_show_snps(
+            {
+                outdir => $outdir,
+                prefix => $prefix2
+            }
+        );
+        $snp_indel = `SNP_INDEL_count.pl $outdir/'nucmer'/$prefix1.snps`;
+        $snp_indel =~ s/\n//;
+        ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
+        $snp_indel = `SNP_INDEL_count.pl $outdir/'nucmer'/$prefix2.snps`;
+        $snp_indel =~ s/\n//;
+        ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
+
+        # }
 ################################################################################
-        my $gfilt_f1 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.gapfilter' );
-        if ( -e $snpfilter_file1 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $filter_command2 =
-              "delta-filter -1 $identity $delta_file1 > $gfilt_f1";
-            if ( system($filter_command2) ) {
-                die "Error running filter_command2 $filter_command2.\n";
+
+        nucmer::run_delta_filter_gap(
+            {
+                outdir   => $outdir,
+                identity => $identity,
+                prefix   => $prefix1
             }
-        }
+        );
+
+        run_delta_filter_gap(
+            {
+                outdir   => $outdir,
+                identity => $identity,
+                prefix   => $prefix2
+            }
+        );
+
 ################################################################################
-        my $coord_f1 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.coords' );
-        if ( -e $coord_f1 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $coords_command1 = "show-coords -clTr $gfilt_f1 > $coord_f1";
-            if ( system($coords_command1) ) {
-                die "Error running coords_command1 $coords_command1.\n";
+        nucmer::run_show_coords(
+            {
+                outdir => $outdir,
+                prefix => $prefix1
             }
-        }
-        my $gaps1 = `parseGapsNUCmer.pl $gap_cutoff $coord_f1 2>/dev/null`;
+        );
+        nucmer::run_show_coords(
+            {
+                outdir => $outdir,
+                prefix => $prefix2
+            }
+        );
+
+        my $gaps1 =
+`parseGapsNUCmer.pl $gap_cutoff $outdir/"nucmer"/$prefix1 . '.coords' 2>/dev/null`;
         ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps1;
+        my $gaps2 =
+`parseGapsNUCmer.pl $gap_cutoff $outdir/"nucmer"/$prefix2 . '.coords' 2>/dev/null`;
+        ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps2;
 ################################################################################
-        my $check =
-`checkNUCmer.pl -i $outdir/$first_name\_$second_name.gaps -r $reference`;
+        my $check1 =
+`checkNUCmer.pl -i $outdir/'nucmer'/$first_name\_$second_name.gaps -r $reference`;
+
         if ( $check == 1 ) {
             print "$second_name aligned < 25% of the $first_name genome\n";
         }
-
-        # }
-
-        # if ( $second_name !~ /$ref_genome/ && $ref_genome ) {
-################################################################################
-        if ( -e $delta_file2 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            print "Running nucmer on $prefix2\n";
-            my $nucmer_command2 =
-"nucmer $options -p $prefix2 $second_fasta $first_fasta  2>/dev/null";
-            if ( system($nucmer_command2) ) {
-                die "Error running nucmer_command2 $nucmer_command2.\n";
-            }
-            `mv $prefix2.delta nucmer/`;
-        }
-################################################################################
-        my $snpfilter_file2 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix2 . '.snpfilter' );
-        if ( -e $snpfilter_file1 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $filter_command3 =
-              "delta-filter -1 $identity $delta_file2 > $snpfilter_file2";
-            if ( system($filter_command3) ) {
-                die "Error running filter_command3 $filter_command3.\n";
-            }
-        }
-################################################################################
-        my $snp_file2 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix2 . '.snps' );
-        if ( -e $snp_file2 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $snp_command2 = "show-snps -CT $$snpfilter_file2 > $snp_file2";
-            if ( system($snp_command2) ) {
-                die "Error running snp_command2 $snp_command2.\n";
-            }
-        }
-################################################################################
-        $snp_indel = `SNP_INDEL_count.pl $outdir/$prefix2.snps`;
-        $snp_indel =~ s/\n//;
-        ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
-#############################################################################
-        my $gfilt_f2 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix2 . '.gapfilter' );
-        if ( -e $gfilt_f2 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $filter_command4 =
-              "delta-filter $identity $delta_file2 > $gfilt_f2";
-            if ( system($filter_command4) ) {
-                die "Error running filter_command4 $filter_command4.\n";
-            }
-        }
-#############################################################################
-        my $coord_f2 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.coords' );
-        if ( -e $coord_f2 ) {
-            print
-              "nucmer already complete for $first_name  and $second_name.\n";
-        }
-        else {
-            my $coords_command2 =
-"show-coords -clTr $outdir/$prefix2.gapfilter > $outdir/$prefix2.coords";
-            if ( system($coords_command2) ) {
-                die "Error running coords_command2 $coords_command2.\n";
-            }
-        }
-        my $gaps2 =
-          `parseGapsNUCmer.pl $gap_cutoff $outdir/$prefix2.coords 2>/dev/null`;
-        ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps2;
-        $check =
-          `checkNUCmer.pl -i $outdir/$second_name\_$first_name.gaps -r $query`;
+        my $check2 =
+`checkNUCmer.pl -i $outdir/$second_name\_$first_name.gaps -r $reference`;
         if ( $check == 1 ) {
-            print "$first_name aligned < 25% of the $second_name genome\n";
+            print "$second_name aligned < 25% of the $first_name genome\n";
         }
-
-        # }
-
         $pm->finish(0);
     }
 
@@ -423,7 +365,7 @@ sub run_ref_nucmer {
           File::Spec->catpath( $outdir, "stats",
             $full_genome_name . '_norepeats.fna' );
 
-        run_nucmer1(
+        nucmer::run_nucmer(
             {
                 outdir            => $outdir,
                 prefix            => $prefix1,
@@ -433,14 +375,14 @@ sub run_ref_nucmer {
             }
         );
 
-        run_snp_filter(
+        nucmer::run_delta_filter_snp(
             {
                 outdir   => $outdir,
                 identity => $identity,
                 prefix   => $prefix1
             }
         );
-        run_show_snps(
+        nucmer::run_show_snps(
             {
                 outdir => $outdir,
                 prefix => $prefix1
@@ -451,14 +393,14 @@ sub run_ref_nucmer {
         $snp_indel =~ s/\n//;
         ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
 
-        run_gap_filter(
+        nucmer::run_delta_filter_gap(
             outdir   => $outdir,
             identity => $identity,
             prefix   => $prefix1
 
         );
 
-        run_show_coords(
+        nucmer::run_show_coords(
             {
                 outdir => $outdir,
                 prefix => $prefix1
@@ -475,159 +417,6 @@ sub run_ref_nucmer {
     print "\nNUCmer on all reference genomes complete.\n";
     print
       "==================================================================\n";
-}
-
-sub run_nucmer1 {
-
-    # Runs nucmer, returns delta file, moves it to nucmer folder
-    my ($args) = @_;
-
-    my $prefix            = $args->{prefix};
-    my $ref_fasta         = $args->{ref_fasta};
-    my $full_genome_fasta = $args->{full_genome_fasta};
-    my $opt               = $args->{options};
-
-    if ( !-e "nucmer" ) {
-        mkdir "nucmer";
-    }
-    my $delta_file =
-      File::Spec->catpath( $args->{outdir}, "nucmer",
-        $args->{prefix} . '.delta' );
-    if ( -e $delta_file ) {
-        print
-"nucmer already complete for $args->{first_name} and $args->{second_name}.\n";
-    }
-    else {
-        print "Running nucmer on $prefix\n";
-        my $nc1 =
-          "nucmer $opt -p $prefix $ref_fasta $full_genome_fasta  2>/dev/null";
-        print "[RUNNING:] $nc1\n";
-        if ( system($nc1) ) {
-            die "Error running nc1 $nc1.\n";
-        }
-        `mv $args->{prefix}.delta nucmer/`;
-    }
-}
-
-sub run_snp_filter {
-
-    # Runs delta filter, and writes the output in .snpfilter
-    my ($args) = @_;
-
-    my $outdir   = $args->{outdir};
-    my $identity = $args->{identity};
-    my $prefix   = $args->{prefix};
-
-    my $snpfilter_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.snpfilter' );
-    my $delta_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.delta' );
-    if ( -e $snpfilter_file ) {
-        print "nucmer already complete for $prefix.\n";
-    }
-    else {
-        my $filter_command1 =
-          "delta-filter -1 $identity $delta_file > $snpfilter_file";
-
-        if ( system($filter_command1) ) {
-            die "Error running filter_command1 $filter_command1.\n";
-        }
-    }
-}
-
-sub run_gap_filter {
-
-    # Runs delta filter, and writes the output in .gapfilter
-    # TODO: figure out whats the difference between this sub and run_snp_filter
-    my ($args) = @_;
-
-    my $outdir   = $args->{outdir};
-    my $identity = $args->{identity};
-    my $prefix   = $args->{prefix};
-
-    my $gapfilter_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.gapfilter' );
-    my $delta_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.delta' );
-    if ( -e $gapfilter_file ) {
-        print "nucmer already complete for $prefix.\n";
-    }
-    else {
-        my $filter_command1 =
-          "delta-filter -1 $identity $delta_file > $gapfilter_file";
-
-        if ( system($filter_command1) ) {
-            die "Error running filter_command1 $filter_command1.\n";
-        }
-    }
-}
-
-sub run_show_snps {
-    my ($args) = @_;
-
-    my $outdir = $args->{outdir};
-    my $prefix = $args->{prefix};
-
-    my $snpfilter_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.snpfilter' );
-    my $snp_file = File::Spec->catpath( $outdir, "nucmer", $prefix . '.snps' );
-    if ( -e $snp_file ) {
-        print "nucmer already complete for $prefix.\n";
-    }
-    else {
-        my $snp_command1 = "show-snps -CT $snpfilter_file > $snp_file";
-        if ( system($snp_command1) ) {
-            die "Error running snp_command1 $snp_command1.\n";
-        }
-    }
-}
-
-sub run_show_coords {
-    my ($args) = @_;
-    my $outdir = $args->{outdir};
-    my $prefix = $args->{prefix};
-
-    my $gfilt_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.gapfilter' );
-
-    my $coord_file =
-      File::Spec->catpath( $outdir, "nucmer", $prefix . '.coords' );
-    if ( -e $gfilt_file ) {
-        print "nucmer already complete for $prefix.\n";
-    }
-    else {
-        my $coords_command1 = "show-coords -clTr $gfilt_file > $coord_file";
-        if ( system($coords_command1) ) {
-            die "Error running coords_command1 $coords_command1.\n";
-        }
-    }
-}
-
-sub combo {
-    my $by = shift;
-    return sub { () }
-      if !$by || $by =~ /\D/ || @_ < $by;
-    my @list = @_;
-
-    my @position = ( 0 .. $by - 2, $by - 2 );
-    my @stop     = @list - $by .. $#list;
-    my $end_pos  = $#position;
-    my $done     = undef;
-
-    return sub {
-        return () if $done;
-        my $cur = $end_pos;
-        {
-            if ( ++$position[$cur] > $stop[$cur] ) {
-                $position[ --$cur ]++;
-                redo if $position[$cur] > $stop[$cur];
-                my $new_pos = $position[$cur];
-                @position[ $cur .. $end_pos ] = $new_pos .. $new_pos + $by;
-            }
-        }
-        $done = 1 if $position[0] == $stop[0];
-        return @list[@position];
-    }
 }
 
 sub cleanup {
