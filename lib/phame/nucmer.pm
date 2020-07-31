@@ -102,7 +102,7 @@ sub run_show_snps {
       File::Spec->catpath( $outdir, "nucmer", $prefix . '.snpfilter' );
     my $snp_file = File::Spec->catpath( $outdir, "nucmer", $prefix . '.snps' );
     if ( -e $snp_file ) {
-        print "nucmer already complete for $prefix.\n";
+        print "show-snps already complete for $prefix.\n";
     }
     else {
         my $snp_command1 = "show-snps -CT $snpfilter_file > $snp_file";
@@ -122,8 +122,8 @@ sub run_show_coords {
 
     my $coord_file =
       File::Spec->catpath( $outdir, "nucmer", $prefix . '.coords' );
-    if ( -e $gfilt_file ) {
-        print "nucmer already complete for $prefix.\n";
+    if ( -e $coord_file ) {
+        print "show-coords already complete for $prefix.\n";
     }
     else {
         my $coords_command1 = "show-coords -clTr $gfilt_file > $coord_file";
