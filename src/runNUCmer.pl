@@ -251,12 +251,6 @@ sub run_all_nucmer {
             }
         );
 
-################################################################################
-
-        my $snpfilter_file1 =
-          File::Spec->catpath( $outdir, "nucmer", $prefix1 . '.snpfilter' );
-
-################################################################################
         nucmer::run_show_snps(
             {
                 outdir => $outdir,
@@ -287,7 +281,7 @@ sub run_all_nucmer {
             }
         );
 
-        run_delta_filter_gap(
+        nucmer::run_delta_filter_gap(
             {
                 outdir   => $outdir,
                 identity => $identity,
@@ -323,7 +317,7 @@ sub run_all_nucmer {
             print "$second_name aligned < 25% of the $first_name genome\n";
         }
         my $check2 =
-`checkNUCmer.pl -i $outdir/$second_name\_$first_name.gaps -r $reference`;
+`checkNUCmer.pl -i $outdir/'nucmer'/$second_name\_$first_name.gaps -r $reference`;
         if ( $check == 1 ) {
             print "$second_name aligned < 25% of the $first_name genome\n";
         }
@@ -394,10 +388,11 @@ sub run_ref_nucmer {
         ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
 
         nucmer::run_delta_filter_gap(
-            outdir   => $outdir,
-            identity => $identity,
-            prefix   => $prefix1
-
+            {
+                outdir   => $outdir,
+                identity => $identity,
+                prefix   => $prefix1
+            }
         );
 
         nucmer::run_show_coords(
