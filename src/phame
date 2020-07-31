@@ -9,7 +9,7 @@ use lib "$RealBin/../lib";
 use lib "$RealBin/../ext/lib/perl5";
 use File::Basename;
 use Time::Piece;
-use PhaME;
+use phame::PhaME;
 use Cwd;
 
 # use Statistics::Distributions;
@@ -27,7 +27,7 @@ $| = 1;
 
 # set up environments
 $ENV{PATH} =
-  "$ENV{PATH}:$RealBin:$RealBin/../thirdParty/miniconda/bin:$RealBin/../bin";
+"$RealBin/../src/:$ENV{PATH}:$RealBin:$RealBin/../thirdParty/miniconda/bin:$RealBin/../bin";
 $ENV{PERL5LIB} =
   ( $ENV{PERL5LIB} )
   ? "$ENV{PERL5LIB}:$RealBin/../lib:$RealBin/../ext/lib/perl5"
