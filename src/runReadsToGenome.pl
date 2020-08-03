@@ -55,15 +55,15 @@ my $plot_only         = 0;
 my $skip_aln          = 0;
 my $no_plot           = 0;
 my $no_snp            = 0;
-my $min_indel_candidate_depth
-    = 3;    #minimum number gapped reads for indel candidates
+my $min_indel_candidate_depth =
+  3;    #minimum number gapped reads for indel candidates
 
 # varinat filter
-my $min_alt_bases  = 3;         # minimum number of alternate bases
-my $max_depth      = 1000000;   # maximum read depth
-my $min_depth      = 7;         #minimum read depth
-my $snp_gap_filter = 3;         #SNP within INT bp around a gap to be filtered
-my $snp_filter     = 0.0;       #SNPs that are in majority
+my $min_alt_bases  = 3;          # minimum number of alternate bases
+my $max_depth      = 1000000;    # maximum read depth
+my $min_depth      = 7;          #minimum read depth
+my $snp_gap_filter = 3;          #SNP within INT bp around a gap to be filtered
+my $snp_filter     = 0.0;        #SNPs that are in majority
 
 $ENV{PATH} = "$Bin:$Bin/../bin/:$ENV{PATH}";
 
@@ -125,7 +125,7 @@ if ($paired_files) {
 
 ## output file variable initialized ##
 my $final_stats_output = "$outDir/$prefix.alnstats.txt";
-my $plotsPdf           = "$outDir/$prefix"."_plots.pdf";
+my $plotsPdf           = "$outDir/$prefix" . "_plots.pdf";
 
 #my $final_vcf_output="$outDir/$prefix.vcf";
 #my $bcf_output="$outDir/$prefix.raw.bcf";
@@ -161,8 +161,8 @@ my $samtools_threads = $numCPU;
 my @bam_outputs;
 for my $ref_file_i ( 0 .. $#ref_files ) {
     my $ref_file = $ref_files[$ref_file_i];
-    my ( $ref_file_name, $ref_file_path, $ref_file_suffix )
-        = fileparse( "$ref_file", qr/\.[^.]*/ );
+    my ( $ref_file_name, $ref_file_path, $ref_file_suffix ) =
+      fileparse( "$ref_file", qr/\.[^.]*/ );
     my $bam_output       = "$outDir/$prefix.sort.bam";
     my $bam_index_output = "$outDir/$prefix.sort.bam.bai";
     push @bam_outputs, $bam_output;
@@ -202,31 +202,31 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
             if ($file_long) {
                 print "Mapping long reads to $ref_file_name\n";
                 if ( $aligner =~ /bowtie/i ) {
-                    `bowtie2 -a --local $bowtie_options -x $ref_file -fU $file_long -S $outDir/LongReads$$.sam`;
+`bowtie2 -a --local $bowtie_options -x $ref_file -fU $file_long -S $outDir/LongReads$$.sam`;
                 }
                 elsif ( $aligner =~ /bwa/i ) {
                     if ($pacbio) {
 
 # `bwa bwasw -M -H $pacbio_bwa_option -t $bwa_threads $ref_file $file_long -f $outDir/LongReads$$.sam`;
-                        `bwa mem -x pacbio $bwa_options $ref_file $file_long | samtools view -@ $samtools_threads -ubS - | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/LongReads$$.bam - `;
+`bwa mem -x pacbio $bwa_options $ref_file $file_long | samtools view -@ $samtools_threads -ubS - | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/LongReads$$.bam - `;
                     }
                     else {
 #`bwa bwasw -M -H -t $bwa_threads $ref_file $file_long -f $outDir/LongReads$$.sam`;
-                        `bwa mem $bwa_options $ref_file $file_long | samtools view -@ $samtools_threads -ubS - |  samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/LongReads$$.bam`;
+`bwa mem $bwa_options $ref_file $file_long | samtools view -@ $samtools_threads -ubS - |  samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/LongReads$$.bam`;
                     }
 
 #my $mapped_Long_reads=`awk '\$3 !~/*/ && \$1 !~/\@SQ/ {print \$1}' $tmp/LongReads$$.sam | uniq - | wc -l`;
 #`echo -e "Mapped_reads_number:\t$mapped_Long_reads" >>$outDir/LongReads_aln_stats.txt`;
                 }
                 elsif ( $aligner =~ /snap/i ) {
-                    `snap-aligner single $ref_file.snap $file_long -o $outDir/LongReads$$.sam $snap_options`;
+`snap-aligner single $ref_file.snap $file_long -o $outDir/LongReads$$.sam $snap_options`;
                 }
                 elsif ( $aligner =~ /minimap2/i ) {
-                    `minimap2 -La $minimap2_options  $tmp/$ref_file_name.mmi $file_long > $outDir/LongReads$$.sam`;
+`minimap2 -La $minimap2_options  $tmp/$ref_file_name.mmi $file_long > $outDir/LongReads$$.sam`;
                 }
 
-                `samtools view -@ $samtools_threads -t $ref_file.fai -uhS $outDir/LongReads$$.sam | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/LongReads$$.bam`
-                    if ( -s "$outDir/LongReads$$.sam" );
+`samtools view -@ $samtools_threads -t $ref_file.fai -uhS $outDir/LongReads$$.sam | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/LongReads$$.bam`
+                  if ( -s "$outDir/LongReads$$.sam" );
             }
             if ($paired_files) {
                 print "Mapping paired end reads to $ref_file_name\n";
@@ -234,25 +234,25 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
                 my $quality_options = "";
                 if ( $aligner =~ /bowtie/i ) {
                     $quality_options = " --phred64 " if ( $offset == 64 );
-                    `bowtie2 $bowtie_options $quality_options -x $ref_file -1 $file1 -2 $file2 -S $outDir/paired$$.sam`;
+`bowtie2 $bowtie_options $quality_options -x $ref_file -1 $file1 -2 $file2 -S $outDir/paired$$.sam`;
                 }
                 elsif ( $aligner =~ /bwa_short/i ) {
                     $quality_options = " -I " if ( $offset == 64 );
-                    `bwa aln $bwa_options $quality_options $ref_file $file1 > $tmp/reads_1_$$.sai`;
-                    `bwa aln $bwa_options $quality_options $ref_file $file2 > $tmp/reads_2_$$.sai`;
-                    `bwa sampe -a 100000 $ref_file $tmp/reads_1_$$.sai $tmp/reads_2_$$.sai $file1 $file2 > $outDir/paired$$.sam`;
+`bwa aln $bwa_options $quality_options $ref_file $file1 > $tmp/reads_1_$$.sai`;
+`bwa aln $bwa_options $quality_options $ref_file $file2 > $tmp/reads_2_$$.sai`;
+`bwa sampe -a 100000 $ref_file $tmp/reads_1_$$.sai $tmp/reads_2_$$.sai $file1 $file2 > $outDir/paired$$.sam`;
                 }
                 elsif ( $aligner =~ /bwa/i ) {
-                    `bwa mem $bwa_options $ref_file $file1 $file2 | samtools view -@ $samtools_threads -ubS -| samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/paired$$.bam `;
+`bwa mem $bwa_options $ref_file $file1 $file2 | samtools view -@ $samtools_threads -ubS -| samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/paired$$.bam `;
                 }
                 elsif ( $aligner =~ /snap/i ) {
-                    `snap-aligner paired $ref_file.snap $file1 $file2 -o $outDir/paired$$.sam $snap_options`;
+`snap-aligner paired $ref_file.snap $file1 $file2 -o $outDir/paired$$.sam $snap_options`;
                 }
                 elsif ( $aligner =~ /minimap2/i ) {
-                    `minimap2  $minimap2_options -ax sr $tmp/$ref_file_name.mmi $file1 $file2 > $outDir/paired$$.sam`;
+`minimap2  $minimap2_options -ax sr $tmp/$ref_file_name.mmi $file1 $file2 > $outDir/paired$$.sam`;
                 }
-                `samtools view -@ $samtools_threads -t $ref_file.fai -uhS $outDir/paired$$.sam | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/paired$$.bam`
-                    if ( -s "$outDir/paired$$.sam" );
+`samtools view -@ $samtools_threads -t $ref_file.fai -uhS $outDir/paired$$.sam | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/paired$$.bam`
+                  if ( -s "$outDir/paired$$.sam" );
             }
 
             if ($singleton) {
@@ -261,38 +261,38 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
                 my $quality_options = "";
                 if ( $aligner =~ /bowtie/i ) {
                     $quality_options = " --phred64 " if ( $offset == 64 );
-                    `bowtie2 $bowtie_options $quality_options -x $ref_file -U $singleton -S $outDir/singleton$$.sam`;
+`bowtie2 $bowtie_options $quality_options -x $ref_file -U $singleton -S $outDir/singleton$$.sam`;
                 }
                 elsif ( $aligner =~ /bwa_short/i ) {
                     $quality_options = " -I " if ( $offset == 64 );
-                    `bwa aln $bwa_options $quality_options $ref_file $singleton > $tmp/singleton$$.sai`;
-                    `bwa samse -n 50 $ref_file $tmp/singleton$$.sai $singleton > $outDir/singleton$$.sam`;
+`bwa aln $bwa_options $quality_options $ref_file $singleton > $tmp/singleton$$.sai`;
+`bwa samse -n 50 $ref_file $tmp/singleton$$.sai $singleton > $outDir/singleton$$.sam`;
                 }
                 elsif ( $aligner =~ /bwa/i ) {
-                    `bwa mem $bwa_options $ref_file $singleton |samtools view -@ $samtools_threads -ubS - | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/singleton$$.bam `;
+`bwa mem $bwa_options $ref_file $singleton |samtools view -@ $samtools_threads -ubS - | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/singleton$$.bam `;
                 }
                 elsif ( $aligner =~ /snap/i ) {
-                    `snap-aligner single $ref_file.snap $singleton -o $outDir/singleton$$.sam $snap_options`;
+`snap-aligner single $ref_file.snap $singleton -o $outDir/singleton$$.sam $snap_options`;
                 }
                 elsif ( $aligner =~ /minimap2/i ) {
-                    `minimap2  $minimap2_options -ax sr $tmp/$ref_file_name.mmi $singleton> $outDir/singleton$$.sam`;
+`minimap2  $minimap2_options -ax sr $tmp/$ref_file_name.mmi $singleton> $outDir/singleton$$.sam`;
                 }
-                `samtools view -@ $samtools_threads -t $ref_file.fai -uhS $outDir/singleton$$.sam | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/singleton$$.bam`
-                    if ( -s "$outDir/singleton$$.sam" );
+`samtools view -@ $samtools_threads -t $ref_file.fai -uhS $outDir/singleton$$.sam | samtools sort -T $tmp -@ $samtools_threads -O BAM -o $outDir/singleton$$.bam`
+                  if ( -s "$outDir/singleton$$.sam" );
             }
 
-# merge bam files if there are different file type, paired, single end, long..
+  # merge bam files if there are different file type, paired, single end, long..
             if ( $file_long and $paired_files and $singleton ) {
-                `samtools merge -f -h $outDir/paired$$.bam -@ $samtools_threads $bam_output $outDir/paired$$.bam $outDir/singleton$$.bam $outDir/LongReads$$.bam`;
+`samtools merge -f -h $outDir/paired$$.bam -@ $samtools_threads $bam_output $outDir/paired$$.bam $outDir/singleton$$.bam $outDir/LongReads$$.bam`;
             }
             elsif ( $file_long and $paired_files ) {
-                `samtools merge -f -h $outDir/paired$$.bam -@ $samtools_threads $bam_output $outDir/paired$$.bam $outDir/LongReads$$.bam`;
+`samtools merge -f -h $outDir/paired$$.bam -@ $samtools_threads $bam_output $outDir/paired$$.bam $outDir/LongReads$$.bam`;
             }
             elsif ( $paired_files and $singleton ) {
-                `samtools merge -f -h $outDir/paired$$.bam -@ $samtools_threads $bam_output $outDir/paired$$.bam $outDir/singleton$$.bam`;
+`samtools merge -f -h $outDir/paired$$.bam -@ $samtools_threads $bam_output $outDir/paired$$.bam $outDir/singleton$$.bam`;
             }
             elsif ( $singleton and $file_long ) {
-                `samtools merge -f -h $outDir/singleton$$.bam -@ $samtools_threads $bam_output $outDir/singleton$$.bam $outDir/LongReads$$.bam`;
+`samtools merge -f -h $outDir/singleton$$.bam -@ $samtools_threads $bam_output $outDir/singleton$$.bam $outDir/LongReads$$.bam`;
             }
             elsif ($paired_files) {
                 `mv $outDir/paired$$.bam $bam_output`;
@@ -312,8 +312,8 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
 my $Rscript = "$tmp/Rscript$$";
 open( my $pdf_fh, ">$Rscript" ) or die "Cannot write $Rscript\n";
 print $pdf_fh "pdf(file=\"$plotsPdf\",width=10,height=8); \n";
-my $stats_print_string_head
-    = "Ref\tRef_len\tRef_GC%\tMapped_reads\tRef_recovery%\tAvg_fold(x)\tFold_std\tNum_of_Gap\tTotal_Gap_bases";
+my $stats_print_string_head =
+"Ref\tRef_len\tRef_GC%\tMapped_reads\tRef_recovery%\tAvg_fold(x)\tFold_std\tNum_of_Gap\tTotal_Gap_bases";
 $stats_print_string_head .= "\tNum_of_SNPs\tNum_of_INDELs" if ( !$no_snp );
 `echo  "$stats_print_string_head" > $final_stats_output`;
 
@@ -333,8 +333,8 @@ $pm->run_on_finish(    # called BEFORE the first call to start()
 for my $ref_file_i ( 0 .. $#ref_files ) {
     my $hash_ref;
     my $ref_file = $ref_files[$ref_file_i];
-    my ( $ref_file_name, $ref_file_path, $ref_file_suffix )
-        = fileparse( "$ref_file", qr/\.[^.]*/ );
+    my ( $ref_file_name, $ref_file_path, $ref_file_suffix ) =
+      fileparse( "$ref_file", qr/\.[^.]*/ );
     $pm->start($ref_file_name) and next;
     my $bam_output       = "$outDir/$prefix.sort.bam";
     my $bam_index_output = "$outDir/$prefix.sort.bam.bai";
@@ -350,18 +350,18 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
     { # skip the alignment steps, SNP steps, assume bam and pileup files were generated.
         ## SNP call
         if ( !$no_snp ) {
-            if ($ploidy eq "haploid") {
+            if ( $ploidy eq "haploid" ) {
                 print "SNPs/Indels call on $ref_file_name\n";
-                `bcftools mpileup -d $max_depth -L $max_depth -m $min_indel_candidate_depth -Ov -f $ref_file $bam_output | bcftools call --ploidy 1 -cO b - > $bcf_output 2>/dev/null`;
-                `bcftools view -v snps,indels,mnps,ref,bnd,other -Ov $bcf_output | vcfutils.pl varFilter -a$min_alt_bases -d$min_depth -D$max_depth > $vcf_output`;
+`bcftools mpileup -d $max_depth -L $max_depth -m $min_indel_candidate_depth -Ov -f $ref_file $bam_output | bcftools call --ploidy 1 -cO b - > $bcf_output 2>/dev/null`;
+`bcftools view -v snps,indels,mnps,ref,bnd,other -Ov $bcf_output | vcfutils.pl varFilter -a$min_alt_bases -d$min_depth -D$max_depth > $vcf_output`;
             }
             else {
                 print "SNPs/Indels call on $ref_file_name\n";
-                `bcftools mpileup -d $max_depth -L $max_depth -m $min_indel_candidate_depth -Ov -f $ref_file $bam_output | bcftools call -cO b - > $bcf_output 2>/dev/null`;
-                `bcftools view -v snps,indels,mnps,ref,bnd,other -Ov $bcf_output | vcfutils.pl varFilter -a$min_alt_bases -d$min_depth -D$max_depth > $vcf_output`;
+`bcftools mpileup -d $max_depth -L $max_depth -m $min_indel_candidate_depth -Ov -f $ref_file $bam_output | bcftools call -cO b - > $bcf_output 2>/dev/null`;
+`bcftools view -v snps,indels,mnps,ref,bnd,other -Ov $bcf_output | vcfutils.pl varFilter -a$min_alt_bases -d$min_depth -D$max_depth > $vcf_output`;
             }
             print "Filtering SNPs\n";
-            `bcftools filter -i '(DP4[0]+DP4[1])==0 || (DP4[2]+DP4[3])/(DP4[0]+DP4[1]+DP4[2]+DP4[3]) > $snp_filter' $vcf_output > $vcf_filtered`;
+`bcftools filter -i '(DP4[0]+DP4[1])==0 || (DP4[2]+DP4[3])/(DP4[0]+DP4[1]+DP4[2]+DP4[3]) > $snp_filter' $vcf_output > $vcf_filtered`;
         }
 
         ## index BAM file
@@ -373,10 +373,10 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
 
         ## derived chimera info
         if ( $aligner =~ /bwa/i and $paired_files ) {
-            my $proper_paired
-                = `grep "properly paired"  $stats_output | awk '{print \$1}' `;
-            my $all_mapped_paired
-                = `grep "with itself and mate mapped"  $stats_output | awk '{print \$1}' `;
+            my $proper_paired =
+              `grep "properly paired"  $stats_output | awk '{print \$1}' `;
+            my $all_mapped_paired =
+`grep "with itself and mate mapped"  $stats_output | awk '{print \$1}' `;
             my $chimera = $all_mapped_paired - $proper_paired;
             chomp $chimera;
             `echo  "Chimera:\t$chimera" >>$stats_output`;
@@ -385,16 +385,16 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
     my %proper_base_hash;
     my %unproper_base_hash;
     if (0) {    # disable for now
-        my $proper_paired_coverage
-            = "$outDir/$ref_file_name.proper_paired$$.coverage";
-        my $unproper_paired_coverage
-            = "$outDir/$ref_file_name.unproper_paired$$.coverage";
+        my $proper_paired_coverage =
+          "$outDir/$ref_file_name.proper_paired$$.coverage";
+        my $unproper_paired_coverage =
+          "$outDir/$ref_file_name.unproper_paired$$.coverage";
 
         ## generate proper-paired reads coverage
-        `samtools view -@ $samtools_threads -u -h -f 2 $bam_output | samtools mpileup -BQ0 -d10000000 -f $ref_file - | awk '{print \$1"\\t"\$2"\\t"\$4}'  > $proper_paired_coverage`;
+`samtools view -@ $samtools_threads -u -h -f 2 $bam_output | samtools mpileup -BQ0 -d10000000 -f $ref_file - | awk '{print \$1"\\t"\$2"\\t"\$4}'  > $proper_paired_coverage`;
 
         ## generate non-proper-paired reads coverage 2 (properpaired)+4(query unmapped)+8(mate unmapped)
-        `samtools view -@ $samtools_threads -u -h -F 14 $bam_output | samtools mpileup -ABQ0 -d10000000 -f $ref_file - | awk '{print \$1"\\t"\$2"\\t"\$4}'  > $unproper_paired_coverage`;
+`samtools view -@ $samtools_threads -u -h -F 14 $bam_output | samtools mpileup -ABQ0 -d10000000 -f $ref_file - | awk '{print \$1"\\t"\$2"\\t"\$4}'  > $unproper_paired_coverage`;
 
         # build proper_paired mapped reads base coverage hash
         open( my $fh1, "$proper_paired_coverage" );
@@ -419,16 +419,17 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
     print "Generate genome coverage plots and histograms...\n";
 
     # get reference informaiton
-    my $num_ref = 0;
+    my $num_ref  = 0;
     my $ref_hash = &get_ref_info( $ref_file, $ref_window_gc );
     $ref_hash = &mapped_reads_per_contigs( $bam_output, $ref_hash );
     &get_consensus( $bcf_output, $ref_hash, $consensusSeq )
-        if ( -e "$bcf_output" && $gen_consensus );
+      if ( -e "$bcf_output" && $gen_consensus );
 
     system("mkdir -p $outDir/Coverage_plots") if ( !$no_plot );
     foreach my $ref_name (
         sort { $ref_hash->{$b}->{reads} <=> $ref_hash->{$a}->{reads} }
-        keys %{$ref_hash} )
+        keys %{$ref_hash}
+      )
     {
         $num_ref++;
         my ( $snp_num, $indel_num );
@@ -436,24 +437,24 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
         my $ref_GC       = $ref_hash->{$ref_name}->{GC};
         my $ref_desc     = $ref_hash->{$ref_name}->{desc};
         my $mapped_reads = $ref_hash->{$ref_name}->{reads};
-        my $stats_print_string
-            = $ref_name . "\t"
-            . $ref_len . "\t"
-            . $ref_GC . "\t"
-            . $mapped_reads . "\t";
+        my $stats_print_string =
+            $ref_name . "\t"
+          . $ref_len . "\t"
+          . $ref_GC . "\t"
+          . $mapped_reads . "\t";
 
         # generate coverage file
         my $coverage_output = "$outDir/$prefix.coverage";
-        my $WindowCoverage_output
-            = "$outDir/${prefix}_${ref_name}.window_size_coverage";
+        my $WindowCoverage_output =
+          "$outDir/${prefix}_${ref_name}.window_size_coverage";
         my $gap_output = "$outDir/${prefix}_${ref_name}.gaps";
-        my $coverage_plot
-            = "$outDir/Coverage_plots/$prefix"."_base_coverage.png";
-        my $histogram
-            = "$outDir/Coverage_plots/$prefix"."coverage_histogram.png";
+        my $coverage_plot =
+          "$outDir/Coverage_plots/$prefix" . "_base_coverage.png";
+        my $histogram =
+          "$outDir/Coverage_plots/$prefix" . "coverage_histogram.png";
 
-        my $pileup_cmd
-            = "samtools mpileup -BQ0 -d10000000 -r $ref_name -f  $ref_file $bam_output ";
+        my $pileup_cmd =
+"samtools mpileup -BQ0 -d10000000 -r $ref_name -f  $ref_file $bam_output ";
 
         # build base coverage hash
         my @base_array = (0) x $ref_len;
@@ -465,8 +466,8 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
         }
         close $pileup_fh;
 
-        $stats_print_string
-            .= &window_size_coverage( $coverage_output,
+        $stats_print_string .=
+          &window_size_coverage( $coverage_output,
             $WindowCoverage_output, \@base_array, $gap_output, $ref_name,
             $ref_len );
 
@@ -476,46 +477,44 @@ for my $ref_file_i ( 0 .. $#ref_files ) {
 
         #if ($paired_files){
         if (0) {    # disable
-            $properpair_coverage_output
-                = "$outDir/$prefix.p$$.window_size_coverage";
-            $unproperpair_coverage_output
-                = "$outDir/$prefix.up$$.window_size_coverage";
-            $other_coverage_plot
-                = "$outDir/$prefix"."coverage_comparison.png";
+            $properpair_coverage_output =
+              "$outDir/$prefix.p$$.window_size_coverage";
+            $unproperpair_coverage_output =
+              "$outDir/$prefix.up$$.window_size_coverage";
+            $other_coverage_plot =
+              "$outDir/$prefix" . "coverage_comparison.png";
             &window_size_coverage( "", $properpair_coverage_output,
                 \%proper_base_hash, "", $ref_name, $ref_len );
             &window_size_coverage( "", $unproperpair_coverage_output,
                 \%unproper_base_hash, "", $ref_name, $ref_len );
         }
         if ( !$no_snp ) {
-            ( $snp_num, $indel_num )
-                = &SNP_INDEL_COUNT( "$vcf_output", "$ref_name" );
+            ( $snp_num, $indel_num ) =
+              &SNP_INDEL_COUNT( "$vcf_output", "$ref_name" );
             $stats_print_string .= $snp_num . "\t" . $indel_num;
         }
         if ( $num_ref > 1 ) {
             `echo  -e "$stats_print_string" >> $stats_output`;
         }
         else {
-            `echo  -e "\n${stats_print_string_head}\n$stats_print_string" >> $stats_output`;
+`echo  -e "\n${stats_print_string_head}\n$stats_print_string" >> $stats_output`;
         }
 
         #$stats_print_string="";
         # pdf
-        my $R_pdf_script
-            = &plot_coverage( $coverage_output, $WindowCoverage_output,
+        my $R_pdf_script =
+          &plot_coverage( $coverage_output, $WindowCoverage_output,
             $ref_window_gc, $gap_output, $prefix, $ref_name, $ref_desc, "",
             "" );
 
-        $hash_ref->{pdfRscript} .= $R_pdf_script;
+        $hash_ref->{pdfRscript}         .= $R_pdf_script;
         $hash_ref->{stats_print_string} .= $stats_print_string . "\n";
 
         # png
         &plot_coverage(
-            $coverage_output, $WindowCoverage_output,
-            $ref_window_gc,   $gap_output,
-            $prefix,          $ref_name,
-            $ref_desc,        $histogram,
-            $coverage_plot
+            $coverage_output, $WindowCoverage_output, $ref_window_gc,
+            $gap_output,      $prefix,                $ref_name,
+            $ref_desc,        $histogram,             $coverage_plot
         );
 
         unless ($debug) {
@@ -536,13 +535,13 @@ $pm->wait_all_children;
 print $pdf_fh "\ntmp<-dev.off()\nquit()\n";
 close $pdf_fh;
 system("R --vanilla --slave --silent < $Rscript 2>/dev/null")
-    if ( !$no_plot );
+  if ( !$no_plot );
 unlink "Rplots.pdf" if ( -e "Rplots.pdf" );
 
 #clean up
 unless ($debug) {
     `rm -rf $tmp`;
-    `rm -rf $outDir/*$$* $outDir/*window_size_coverage $outDir/*.windows_gc.txt`;
+`rm -rf $outDir/*$$* $outDir/*window_size_coverage $outDir/*.windows_gc.txt`;
 }
 ### END ###
 
@@ -559,12 +558,12 @@ sub plot_coverage {
     my $coverage_xlab        = ($ref_desc) ? $ref_desc : $ref_name;
     my $png_Rscript          = "$tmp/Rscript_png$$";
     open( my $png_fh, ">$png_Rscript" )
-        or die "Cannot write $png_Rscript\n"
-        if ($histogram_png);
+      or die "Cannot write $png_Rscript\n"
+      if ($histogram_png);
     my $print_string;
-    $print_string
-        = "bitmap(file=\"$histogram_png\",width=1024,height=640,units=\"px\")\n"
-        if ($histogram_png);
+    $print_string =
+      "bitmap(file=\"$histogram_png\",width=1024,height=640,units=\"px\")\n"
+      if ($histogram_png);
     $print_string .= "
 # histogram
 # read file
@@ -592,9 +591,9 @@ leg.txt<-paste(\"Average fold: \",format(mean_cov,digit=4),\"sd\", format(std_co
 legend(\"topright\",leg.txt)
 ";
 
-    $print_string
-        .= "\nbitmap(file=\"$coverage_png\",width=1024,height=640,units=\"px\")\n"
-        if ($histogram_png);
+    $print_string .=
+      "\nbitmap(file=\"$coverage_png\",width=1024,height=640,units=\"px\")\n"
+      if ($histogram_png);
     $print_string .= "
 # coverage plot
 # init device
@@ -637,7 +636,7 @@ par(def.par)#- reset to default
         print $png_fh "$print_string\ntmp<-dev.off()\nquit()\n";
         close $png_fh;
         system("R --vanilla --slave --silent < $png_Rscript 2>/dev/null")
-            if ( !$no_plot );
+          if ( !$no_plot );
         unlink $png_Rscript;
     }
 
@@ -653,11 +652,11 @@ sub mapped_reads_per_contigs {
     my $ref_hash_r = shift;
     my %filter;
     open( my $sam_fh, "samtools view -F 4 $bam_output | " )
-        or die "Cannot read $bam_output";
+      or die "Cannot read $bam_output";
     while (<$sam_fh>) {
         chomp;
         my @samFields = split /\t/, $_;
-        my $R1_R2 = 1;
+        my $R1_R2     = 1;
         $R1_R2 = 2 if ( $samFields[1] & 128 );
         my $unique_id = $samFields[0] . "_$R1_R2";
         my $ref_id    = $samFields[2];
@@ -685,7 +684,7 @@ sub get_ref_info {
     my $GC_content;
     my $avg_pos;
     open( my $out_fh, ">$ref_window_gc_file" ) or die "$!\n";
-    open( my $ref_fh, $file ) or die "$!\n";
+    open( my $ref_fh, $file )                  or die "$!\n";
 
     while (<$ref_fh>) {
         chomp;
@@ -703,21 +702,21 @@ sub get_ref_info {
                 $step_size   = int( $window_size / 5 ) || 1;
                 $avg_pos     = $window_size / 2;
                 for (
-                    my $i = 0;
-                    $i <= $seq_len - $window_size;
+                    my $i = 0 ;
+                    $i <= $seq_len - $window_size ;
                     $i = $i + $step_size
-                    )
+                  )
                 {
                     my $window_seq = substr( $seq, $i, $window_size );
                     $GC_num     = $window_seq =~ tr/GCgc/GCgc/;
                     $GC_content = $GC_num / $window_size * 100;
                     if ( $i == 0 ) {
                         print $out_fh $id, "\t", $avg_pos, "\t", $GC_content,
-                            "\n";
+                          "\n";
                     }
                     else {
                         print $out_fh $id, "\t", $avg_pos + $i, "\t",
-                            $GC_content, "\n";
+                          $GC_content, "\n";
                     }
 
                 }
@@ -735,7 +734,7 @@ sub get_ref_info {
     if ($seq) {
         $seq_len = length $seq;
         my $GC_num = $seq =~ tr/GCgc/GCgc/;
-        $GC_content = sprintf( "%.2f", $GC_num / $seq_len * 100 );
+        $GC_content        = sprintf( "%.2f", $GC_num / $seq_len * 100 );
         $hash{$id}->{desc} = $desc;
         $hash{$id}->{len}  = $seq_len;
         $hash{$id}->{GC}   = $GC_content;
@@ -744,11 +743,7 @@ sub get_ref_info {
         $window_size = int( $seq_len / 500 )   || 2;
         $step_size   = int( $window_size / 5 ) || 1;
         $avg_pos     = $window_size / 2;
-        for (
-            my $i = 0;
-            $i <= $seq_len - $window_size;
-            $i = $i + $step_size
-            )
+        for ( my $i = 0 ; $i <= $seq_len - $window_size ; $i = $i + $step_size )
         {
             my $window_seq = substr( $seq, $i, $window_size );
             $GC_num     = $window_seq =~ tr/GCgc/GCgc/;
@@ -757,8 +752,7 @@ sub get_ref_info {
                 print $out_fh $id, "\t", $avg_pos, "\t", $GC_content, "\n";
             }
             else {
-                print $out_fh $id, "\t", $avg_pos + $i, "\t", $GC_content,
-                    "\n";
+                print $out_fh $id, "\t", $avg_pos + $i, "\t", $GC_content, "\n";
             }
         }
 
@@ -775,7 +769,7 @@ sub window_size_coverage {
 # return statistiacl numbers, genome recovery, fold coveage, fold coverage std, gap number, gap total bases.
     my ( $coverage_output, $WindowCoverage_output, $base_array, $gap_output,
         $ref_name, $ref_len )
-        = @_;
+      = @_;
 
     #$window_size= ($ref_len>1000)? int($ref_len/1000)+10:10;
     $window_size = int( $ref_len / 500 )   || 2;
@@ -803,14 +797,14 @@ sub window_size_coverage {
 
     if ($coverage_output) {
         open( $cov_out_fh, ">$coverage_output" )
-            or die "$! $coverage_output\n";
+          or die "$! $coverage_output\n";
         open( $gap_fh, ">$gap_output" ) or die "$! $gap_output\n";
         print $gap_fh "Start\tEnd\tLength\tRef_ID\n";
     }
 
     #  print $window_size," window\t step ",$step_size,"\n";
     open( $window_cov_out_fh, ">$WindowCoverage_output" )
-        or die "$! $WindowCoverage_output\n";
+      or die "$! $WindowCoverage_output\n";
     for ( 1 .. $ref_len ) {
         if ( $base_array->[ $_ - 1 ] ) {
             $pos_cov = $base_array->[ $_ - 1 ];
@@ -819,8 +813,8 @@ sub window_size_coverage {
                 if (@gap_array) {
                     $gap_length = $gap_array[-1] - $gap_array[0] + 1;
                     print $gap_fh $gap_array[0], "\t", $gap_array[-1], "\t",
-                        $gap_array[-1] - $gap_array[0] + 1, "\t", $ref_name,
-                        "\n";
+                      $gap_array[-1] - $gap_array[0] + 1, "\t", $ref_name,
+                      "\n";
                     $gap_count++;
                     $gap_total_len += $gap_length;
                     @gap_array = ();
@@ -847,7 +841,7 @@ sub window_size_coverage {
             $step       = 1;
             $window_sum = $cov_sum;
             print $window_cov_out_fh $avg_pos, "\t",
-                $window_sum / $window_size, "\n";
+              $window_sum / $window_size, "\n";
         }
 
         if ( $_ > $window_size ) {
@@ -863,7 +857,7 @@ sub window_size_coverage {
             $window_sum = $window_sum + $after_step_sum - $previous_step_sum;
             $avg_pos    = $avg_pos + $step_size;
             print $window_cov_out_fh $avg_pos, "\t",
-                $window_sum / $window_size, "\n";
+              $window_sum / $window_size, "\n";
             $step++;
         }
     }
@@ -871,21 +865,21 @@ sub window_size_coverage {
         if (@gap_array) {
             $gap_length = $gap_array[-1] - $gap_array[0] + 1;
             print $gap_fh $gap_array[0], "\t", $gap_array[-1], "\t",
-                $gap_array[-1] - $gap_array[0] + 1, "\t", $ref_name, "\n";
+              $gap_array[-1] - $gap_array[0] + 1, "\t", $ref_name, "\n";
             $gap_count++;
             $gap_total_len += $gap_length;
         }
         my ( $std_cov, $avg_cov ) = &standard_deviation($base_array);
-        my $percent_genome_coverage
-            = sprintf( "%.4f", $covered_base_num / $ref_len * 100 );
+        my $percent_genome_coverage =
+          sprintf( "%.4f", $covered_base_num / $ref_len * 100 );
         my $fold     = sprintf( "%.2f", $avg_cov );
         my $fold_std = sprintf( "%.2f", $std_cov );
-        $stats_return
-            = $percent_genome_coverage . "\t"
-            . $fold . "\t"
-            . $fold_std . "\t"
-            . $gap_count . "\t"
-            . $gap_total_len . "\t";
+        $stats_return =
+            $percent_genome_coverage . "\t"
+          . $fold . "\t"
+          . $fold_std . "\t"
+          . $gap_count . "\t"
+          . $gap_total_len . "\t";
         close $cov_out_fh;
     }
     close $gap_fh;
@@ -926,8 +920,8 @@ sub fold {
     my $seq_desc;
     my $len_cutoff = 0;
     my $seq_num;
-    my ( $file_name, $file_path, $file_suffix )
-        = fileparse( "$file", qr/\.[^.]*/ );
+    my ( $file_name, $file_path, $file_suffix ) =
+      fileparse( "$file", qr/\.[^.]*/ );
     my $fold_seq_file = "$tmp/${file_name}$file_suffix";
     open( my $in_fh,  $file );
     open( my $out_fh, ">$fold_seq_file" );
@@ -1015,14 +1009,13 @@ sub get_consensus {
         if ( $last_chr ne $t[0] ) {
             if ($last_chr) {
                 if ( $refHash->{$last_chr}->{len} - $last_pos > 1 ) {
-                    $seq
-                        .= 'N' x ( $refHash->{$last_chr}->{len} - $last_pos );
+                    $seq .= 'N' x ( $refHash->{$last_chr}->{len} - $last_pos );
                 }
                 $seq = &fold_str($seq);
                 print $o_fh "\>Consensus_To_Ref_$last_chr\n$seq";
             }
             ( $last_chr, $last_pos ) = ( $t[0], 0 );
-            $seq = $qual = '';
+            $seq  = $qual = '';
             @gaps = ();
         }
 
@@ -1040,8 +1033,8 @@ sub get_consensus {
             my ( $b, $q );
             $q = $1 if ( $t[7] =~ /FQ=(-?[\d\.]+)/ );
             if ( $q < 0 ) {
-                $_ = ( $t[7] =~ /AF1=([\d\.]+)/ ) ? $1 : 0;
-                $b = ( $_ < .5 || $alt eq '.' ) ? $ref : $alt;
+                $_ = ( $t[7] =~ /AF1=([\d\.]+)/ ) ? $1   : 0;
+                $b = ( $_ < .5 || $alt eq '.' )   ? $ref : $alt;
                 $q = -$q;
             }
             else {
