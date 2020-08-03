@@ -183,7 +183,7 @@ sub run_ref_nucmer {
 
         ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps;
 
-        open( OUT,  ">$outdir/$prefix\_snp_INDEL.txt" ) || die "$!";
+        open( OUT,  ">$outdir/$prefix\_snp_indel.txt" ) || die "$!";
         open( OUT1, ">$outdir/$prefix\_gaps.txt" )      || die "$!";
         print OUT $snp_indel;
         print OUT1 $gaps;
@@ -236,9 +236,9 @@ sub run_all_nucmer {
                 }
             );
 
-            my $snp_INDEL = `SNP_INDEL_count.pl $outdir/'nucmer'/$prefix.snps`;
-            $snp_INDEL =~ s/\n//;
-            ( $snp_n, $indel_n ) = split /\t/, $snp_INDEL;
+            my $snp_indel = `SNP_INDEL_count.pl $outdir/'nucmer'/$prefix.snps`;
+            $snp_indel =~ s/\n//;
+            ( $snp_n, $indel_n ) = split /\t/, $snp_indel;
 
             nucmer::run_delta_filter_gap(
                 {
@@ -257,6 +257,7 @@ sub run_all_nucmer {
 
             my $gaps =
 `parseGapsNUCmer.pl $gap_cutoff $outdir/'nucmer'/$prefix.coords 2>/dev/null`;
+            ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps;
             my $check =
 `checkNUCmer.pl -i $outdir/'nucmer'/$prefix.gaps -r $reference_list[$i]`;
 
@@ -267,9 +268,9 @@ sub run_all_nucmer {
 
             ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps;
 
-            open( OUT, ">$outdir/'nucmer'/$prefix\_snp_INDEL.txt" ) || die "$!";
-            open( OUT1, ">$outdir/'nucmer'/$prefix\_gaps.txt" ) || die "$!";
-            print OUT $snp_INDEL;
+            open( OUT,  ">$outdir/$prefix\_snp_indel.txt" ) || die "$!";
+            open( OUT1, ">$outdir/$prefix\_gaps.txt" )      || die "$!";
+            print OUT $snp_indel;
             print OUT1 $gaps;
             close OUT;
             close OUT1;
@@ -284,11 +285,13 @@ sub run_all_nucmer {
 
 sub cleanup {
     `mv $outdir/*.snps $outdir/snps`;
-    `mv $outdir/*.gaps $outdir/gaps`;
-    `mv $outdir/*_snp_INDEL.txt $outdir/stats`;
 
-    # `mv $outdir/*_gaps.txt $outdir/stats`;
-    # `mv $outdir/*.coords $outdir/stats`;
+    # `mv $outdir/*.gaps $outdir/nucmer`;
+    `mv $outdir/*_snp_indel.txt $outdir/nucmer`;
+    `mv $outdir/*_gaps.txt $outdir/nucmer`
+
+      # `mv $outdir/*_gaps.txt $outdir/stats`;
+      # `mv $outdir/*.coords $outdir/stats`;
 }
 
 sub usage {
