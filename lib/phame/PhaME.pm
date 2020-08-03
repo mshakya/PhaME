@@ -89,8 +89,8 @@ sub check {
         $pref_name =~ s/\W/_/g;    # Replacing special characters with _
 
         #print "This is the 2nd time around!\n";
-        my $snpdir = "$wdir/snps";
-        my $gapdir = "$wdir/gaps";
+        my $snpdir = "$wdir/nucmer";
+        my $gapdir = "$wdir/nucmer";
         if ( !-e $list ) {
             print
 "\n$list not found.\nChange control file to run the entire pipeline.\n";
@@ -213,7 +213,7 @@ sub identifyGaps {
     my $project   = shift;
     my $error     = shift;
     my $log       = shift;
-    my $gapdir    = $dir . '/gaps';
+    my $gapdir    = $dir . '/nucmer';
     my $repeatdir = $dir . '/stats';
     my %query;
     my $line = 0;
@@ -541,7 +541,7 @@ sub readsMapping {
     my $ploidy     = shift;
     my $snp_filter = shift;
     my $log        = shift;
-    my $outdir     = $indir . "/results";
+    my $outdir     = $indir . "/results/maps";
     my $reference  = $outdir . '/temp/' . $name . '.fna';
     my $type;
 
