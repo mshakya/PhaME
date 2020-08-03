@@ -14,7 +14,7 @@ if [[ $1 -eq 1 ]] || [[ -z $1 ]];then
 		echo "Test 1 finished without any errors";
 	else
 		echo "Test 1: There is something wrong!"
-		echo "t1_all_snp_alignment.fna does not have 2 sequences."
+		echo "t1_all_snp_alignment.fna does not have 10 sequences."
 
 		exit 1
 	fi
