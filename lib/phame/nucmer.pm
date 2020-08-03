@@ -59,6 +59,7 @@ sub run_delta_filter_snp {
     else {
         my $filter_command1 =
           "delta-filter -1 $identity $delta_file > $snpfilter_file";
+        print "[RUNNING:] $filter_command1\n";
 
         if ( system($filter_command1) ) {
             die "Error running filter_command1 $filter_command1.\n";
@@ -85,6 +86,7 @@ sub run_delta_filter_gap {
     else {
         my $filter_command1 =
           "delta-filter $identity $delta_file > $gapfilter_file";
+        print "[RUNNING:] $filter_command1\n";
 
         if ( system($filter_command1) ) {
             die "Error running filter_command1 $filter_command1.\n";
@@ -106,6 +108,7 @@ sub run_show_snps {
     }
     else {
         my $snp_command1 = "show-snps -CT $snpfilter_file > $snp_file";
+        print "[RUNNING:] $snp_command1\n";
         if ( system($snp_command1) ) {
             die "Error running snp_command1 $snp_command1.\n";
         }
@@ -127,6 +130,7 @@ sub run_show_coords {
     }
     else {
         my $coords_command1 = "show-coords -clTr $gfilt_file > $coord_file";
+        print "[RUNNING:] $coords_command1\n";
         if ( system($coords_command1) ) {
             die "Error running coords_command1 $coords_command1.\n";
         }
