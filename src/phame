@@ -64,7 +64,7 @@ AUTHORS
 #...............................................................................
 # global variables
 my $PACKAGENAME    = "PhaME";
-my $PACKAGEVERSION = "1.0.5";
+my $PACKAGEVERSION = "1.0.6";
 my $AUTHORS        = "Migun Shakya, Chien-Chi Lo, Sanaa Ahmed";
 my $URL            = 'https://github.com/LANL-Bioinformatics/PhaME';
 my $vcheck         = '';
@@ -288,7 +288,7 @@ print "PhaME v$PACKAGEVERSION \n";
 ##########################################################################################
 # create some necessary directories
 my $snpdir  = $outdir . '/snps';
-my $gapdir  = $outdir . '/gaps';
+my $gapdir  = $outdir . '/nucmer';
 my $statdir = $outdir . '/stats';
 my $summary = $outdir . '/' . "$project\_genome_lengths.txt";
 `mkdir -p $snpdir $gapdir $statdir`;
