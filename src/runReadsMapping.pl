@@ -18,38 +18,41 @@ use Parallel::ForkManager;
 $ENV{PATH} = "$RealBin:$RealBin/../ext/bin:$ENV{PATH}";
 
 ###############Set up variables#################################################
-my ( $indir, $reference, $prefix, $thread, $list, $aligner, $ploidy, $snp_filter );
+my (
+    $indir, $reference, $prefix, $thread,
+    $list,  $aligner,   $ploidy, $snp_filter
+);
 my @command;
 my $outdir = `pwd`;
 $outdir =~ s/\n//;
 ###############Set up variables#################################################
 
 GetOptions(
-    'q|querydir=s'  => \$indir,
-    'r|reference=s' => \$reference,
-    'd|outdir=s'    => \$outdir,
-    't|thread=i'    => \$thread,
-    'l|list=s'      => \$list,
-    'a|aligner=s'   => \$aligner,
-    'p|ploidy=s'    => \$ploidy,
-    's|snp_filter=f'    => \$snp_filter,
-    'h|help'        => sub { usage() }
+    'q|querydir=s'   => \$indir,
+    'r|reference=s'  => \$reference,
+    'd|outdir=s'     => \$outdir,
+    't|thread=i'     => \$thread,
+    'l|list=s'       => \$list,
+    'a|aligner=s'    => \$aligner,
+    'p|ploidy=s'     => \$ploidy,
+    's|snp_filter=f' => \$snp_filter,
+    'h|help'         => sub { usage() }
 );
 
 &usage() unless ( $indir && $aligner );
 
 ####Checking the number of allowed threads######################################
-my $max_thread
-    = ( $^O =~ /darwin/ )
-    ? `sysctl hw.ncpu | awk '{print \$2}'`
-    : `grep -c ^processor /proc/cpuinfo`;
+my $max_thread =
+  ( $^O =~ /darwin/ )
+  ? `sysctl hw.ncpu | awk '{print \$2}'`
+  : `grep -c ^processor /proc/cpuinfo`;
 if ( $thread < 1 || $thread > $max_thread ) {
     die("-thread value must be between than 1 and $max_thread.\n");
 }
 ################################################################################
 
 ####################Setting up directories######################################
-if ( !-e $outdir ) { mkdir "$outdir"; }
+if ( !-e $outdir )        { mkdir "$outdir"; }
 if ( $outdir =~ /.+\/$/ ) { my $temp = chop($outdir); }
 chdir $outdir;
 
@@ -74,10 +77,13 @@ $pm->run_on_finish(    # called BEFORE the first call to start()
                 open( FILE, "$gap_file" );
                 while (<FILE>) { $lines++; }
                 if ( $lines == 1 ) {
-                    `rm -f $gap_file`;
+
+                    # `rm -f $gap_file`;
                     print "Removed $gap_file\n";
                     $lines = 0;
                 }
+
+                # TODO: will create a folder to keep all outputs from mapping
                 else { `mv $gap_file $outdir/gaps`; }
             }
         }
@@ -126,21 +132,24 @@ sub read_directory {
                 $check{$temp}++;
                 $query  = $dir . '/' . $files;
                 $prefix = "$name";
-                create_bowtie_commands( $query, $prefix, $temp, $thread, $snp_filter );
+                mapping_function( $query, $prefix, $temp, $thread,
+                    $snp_filter );
             }
             $temp = $1 . '_read';
             if ( exists $queries{$temp} && !exists $check{$temp} ) {
                 $check{$temp}++;
                 $query  = $dir . '/' . $files;
                 $prefix = "$name";
-                create_bowtie_commands( $query, $prefix, $temp, $thread, $snp_filter );
+                mapping_function( $query, $prefix, $temp, $thread,
+                    $snp_filter );
             }
             $temp = $1 . '_sread';
             if ( exists $queries{$temp} && !exists $check{$temp} ) {
                 $check{$temp}++;
                 $query  = $dir . '/' . $files;
                 $prefix = "$name";
-                create_bowtie_commands( $query, $prefix, $temp, $thread, $snp_filter );
+                mapping_function( $query, $prefix, $temp, $thread,
+                    $snp_filter );
             }
         }
         if ( $files !~ /$name/ && $files =~ /(.+)\.fa?s?t?q$/ ) {
@@ -149,7 +158,8 @@ sub read_directory {
                 $check{$temp}++;
                 $query  = $dir . '/' . $files;
                 $prefix = "$name";
-                create_bowtie_commands( $query, $prefix, $temp, $thread, $snp_filter );
+                mapping_function( $query, $prefix, $temp, $thread,
+                    $snp_filter );
             }
         }
     }
@@ -157,15 +167,16 @@ sub read_directory {
 }
 
 ################################################################################
-sub create_bowtie_commands {
-    my $read   = shift;
-    my $prefix = shift;
-    my $temp   = shift;
-    my $thread = shift;
+sub mapping_function {
+    my $read       = shift;
+    my $prefix     = shift;
+    my $temp       = shift;
+    my $thread     = shift;
     my $snp_filter = shift;
     my $read1;
     my $read2;
     my $readu;
+    my $map_cmd;
     my ( $name, $path, $suffix ) = fileparse( "$read", qr/\.[^.]*/ );
     my $bowtie_options = '-p $thread';
 
@@ -177,20 +188,37 @@ sub create_bowtie_commands {
             $read2 = $path . $1 . $2 . '2' . $4 . $suffix;
         }
 
-        my $bowtie_command
-            = "runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -p '$read1 $read2' -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0";
+        my $map_plot = File::Spec->catpath( $outdir, $prefix . '_plots.pdf' );
+        if ( -e $map_plot ) {
+            print "Paired reads, $read1 and $read2, are already mapped";
+            $map_cmd =
+"runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -p '$read1 $read2' -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0 -skip_aln";
+        }
+        else {
+            $map_cmd =
+"runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -p '$read1 $read2' -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0";
+        }
+        print "\n[RUNNING:] $map_cmd\n";
+        push( @command, $map_cmd );
 
-        print "[RUNNING:] $bowtie_command\n";
-        push( @command, $bowtie_command );
     }
     elsif ( $temp =~ /sread/i ) {
         $prefix .= "\_$name";
-        my $bowtie_command
-            = "runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -u $read -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0";
-        $bowtie_command= "runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -long $read -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0" if ($aligner =~ /minimap/);
-        print "[RUNNING:] $bowtie_command\n";
-        push( @command, $bowtie_command );
+        my $map_plot = File::Spec->catpath( $outdir, $prefix . '_plots.pdf' );
+
+        if ( -e $map_plot ) {
+            print "Single read $read is already mapped";
+            $map_cmd =
+"runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -u $read -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0 -skip_aln";
+        }
+        else {
+            $map_cmd =
+"runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -u $read -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread -consensus 0";
+        }
+        print "\n[RUNNING:] $map_cmd\n";
+        push( @command, $map_cmd );
     }
+
     elsif ( $temp =~ /_read/i ) {
 
         if ( $name =~ /(.+)([_.]R)(\d)(.*)$/ ) {
@@ -199,13 +227,21 @@ sub create_bowtie_commands {
             $read2 = $path . $1 . $2 . '2' . $4 . $suffix;
             $readu = $path . $1 . $suffix;
         }
+        my $map_plot = File::Spec->catpath( "maps", $prefix . '.pdf' );
+        if ( -e $map_plot ) {
+            print "Mapping step already finished";
+            my $map_cmd =
+"runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -p $read1,$read2 -u $readu -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread `-bowtie_options '-p $thread'";
+        }
+        else {
 
-        my $bowtie_command
-            = "runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -p $read1,$read2 -u $readu -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread `-bowtie_options '-p $thread'";
+            my $map_cmd =
+"runReadsToGenome.pl -snp_filter $snp_filter -ploidy $ploidy -p $read1,$read2 -u $readu -ref $reference -pre $prefix -d $outdir -aligner $aligner -cpu $thread `-bowtie_options '-p $thread' -skip_aln";
+        }
 
-        print "[RUNNING:] $bowtie_command\n";
+        print "\n[RUNNING:] $map_cmd\n";
 
-        push( @command, $bowtie_command );
+        push( @command, $map_cmd );
     }
 }
 
