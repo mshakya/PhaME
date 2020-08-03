@@ -304,21 +304,21 @@ sub run_all_nucmer {
         );
 
         my $gaps1 =
-`parseGapsNUCmer.pl $gap_cutoff $outdir/"nucmer"/$prefix1 . '.coords' 2>/dev/null`;
+`parseGapsNUCmer.pl $gap_cutoff $outdir/"nucmer"/$prefix1.coords 2>/dev/null`;
         ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps1;
         my $gaps2 =
-`parseGapsNUCmer.pl $gap_cutoff $outdir/"nucmer"/$prefix2 . '.coords' 2>/dev/null`;
+`parseGapsNUCmer.pl $gap_cutoff $outdir/"nucmer"/$prefix2.coords 2>/dev/null`;
         ( $ref_gaps, $query_gaps, undef ) = split /\n/, $gaps2;
 ################################################################################
         my $check1 =
 `checkNUCmer.pl -i $outdir/'nucmer'/$first_name\_$second_name.gaps -r $reference`;
 
-        if ( $check == 1 ) {
+        if ( $check1 eq 1 ) {
             print "$second_name aligned < 25% of the $first_name genome\n";
         }
         my $check2 =
 `checkNUCmer.pl -i $outdir/'nucmer'/$second_name\_$first_name.gaps -r $reference`;
-        if ( $check == 1 ) {
+        if ( $check1 eq 1 ) {
             print "$second_name aligned < 25% of the $first_name genome\n";
         }
         $pm->finish(0);
@@ -416,13 +416,11 @@ sub run_ref_nucmer {
 
 sub cleanup {
 
-    #if (-e "$outdir/*.coords"){`rm $outdir/*.coords`};
     if ( -e "$outdir/*.mgaps" ) { unlink "$outdir/*.mgaps" }
     if ( -e "$outdir/*.ntref" ) { unlink "$outdir/*.ntref" }
     `cat $outdir/'stats'/*_repeat_stats.txt > $outdir/'stats'/repeat_stats.txt`;
 
     # `mv $outdir/*.snps $outdir/snps`;
-    # `mv $outdir/*.gaps $outdir/gaps`;
     # `mv $outdir/*_stats.txt $outdir/stats`;
     # `mv $outdir/*_coords.txt $outdir/stats`;
     # `mv $outdir/*.coords $outdir/stats`;
