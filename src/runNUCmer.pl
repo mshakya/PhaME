@@ -160,10 +160,12 @@ sub run_self_nucmer {
 
             my $command =
 "get_repeat_coords.pl -l $len_cutoff -i $repeat_identity -o $coords -s $stat $reference";
+            print "[RUNNING:]$command\n";
             if ( system($command) ) { die "Error running $command.\n"; }
 
             my $remove_repeats =
               "removeRepeats.pl -f $reference -c $coords -o $fasta";
+            print "[RUNNING:]$remove_repeats\n";
             if ( system($remove_repeats) ) {
                 die "Error running $remove_repeats.\n";
             }
