@@ -16,7 +16,7 @@ use Getopt::Long;
 use File::Basename;
 use Parallel::ForkManager;
 use lib "$RealBin/../lib/";
-use PhaME::nucmer;
+use phame::nucmer;
 
 # require "./runNUCmer.pl";
 
